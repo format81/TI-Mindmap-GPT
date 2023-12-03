@@ -1,0 +1,5 @@
+BeautifulSoup4
+openai
+cohere
+requests
+utils
