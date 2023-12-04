@@ -91,9 +91,9 @@ with st.sidebar:
     )
     st.markdown("Created by [Antonio Formato](https://www.linkedin.com/in/antonioformato/).")
     # Add "Star on GitHub"
-    #st.sidebar.markdown(
-    #    "⭐ Star on GitHub: [![Star on GitHub](https://img.shields.io/github/stars/format81/tigraphicsummarization-?style=social)](https://github.com/format81/tiarticlesummarization)"
-    #)
+    st.sidebar.markdown(
+        "⭐ Star on GitHub: [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
+    )
     st.markdown("""---""")
 st.sidebar.header("Setup")
 with st.sidebar:
