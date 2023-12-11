@@ -3,5 +3,3 @@ openai
 cohere
 requests
 utils
-streamlit
-html
