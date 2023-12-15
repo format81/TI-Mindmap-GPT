@@ -3,3 +3,7 @@ openai
 cohere
 requests
 utils
+<<<<<<< HEAD
+=======
+pandas
+>>>>>>> f3ca48e (Added support to Azure OpenAI, recap translation service and IOCs extraction)
