@@ -33,6 +33,81 @@ def mermaid_chart(mindmap_code):
     """
     return html_code
 
+# with save to SVG capability
+def mermaid_chart_svg(mindmap_code):
+    html_code = f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <div class="mermaid" id="mermaidChart">{mindmap_code}</div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+    mermaid.initialize({{startOnLoad:true}});
+    function downloadSVG() {{
+        var svg = document.querySelector("#mermaidChart svg");
+        var serializer = new XMLSerializer();
+        var source = serializer.serializeToString(svg);
+        var a = document.createElement("a");
+        a.href = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(source);
+        a.download = 'mindmap.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }}
+    </script>
+    <button onclick="downloadSVG()">Save Mindmap</button>
+    """
+    return html_code
+
+# with save to PNG capability
+def mermaid_chart_png(mindmap_code):
+    html_code = f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <div class="mermaid" id="mermaidChart">{mindmap_code}</div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+    mermaid.initialize({{startOnLoad:true}});
+    function downloadPNG() {{
+        var svg = document.querySelector("#mermaidChart svg");
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var data = (new XMLSerializer()).serializeToString(svg);
+        var DOMURL = window.URL || window.webkitURL || window;
+        
+        var img = new Image();
+        var svgBlob = new Blob([data], {{type: 'image/svg+xml;charset=utf-8'}});
+        var url = DOMURL.createObjectURL(svgBlob);
+        
+        img.onload = function () {{
+            ctx.canvas.width = svg.getBoundingClientRect().width;
+            ctx.canvas.height = svg.getBoundingClientRect().height;
+            ctx.drawImage(img, 0, 0);
+            DOMURL.revokeObjectURL(url);
+            
+            var imgURI = canvas
+                .toDataURL('image/png')
+                .replace('image/png', 'image/octet-stream');
+            
+            var evt = new MouseEvent('click', {{
+                view: window,
+                bubbles: false,
+                cancelable: true
+            }});
+            
+            var a = document.createElement('a');
+            a.setAttribute('download', 'mindmap.png');
+            a.setAttribute('href', imgURI);
+            a.setAttribute('target', '_blank');
+            
+            a.dispatchEvent(evt);
+        }};
+        
+        img.src = url;
+    }}
+    </script>
+    <button onclick="downloadPNG()">Save Mindmap as PNG</button>
+    """
+    return html_code
+
+
 # Function to summarize the blog, it work for both OpenAI and Azure OpenAI
 def summarise(input_text, client, service_selection, selected_language):
     # Combine the selected languages into a string, or default to "English" if none selected
@@ -63,6 +138,39 @@ def summarise(input_text, client, service_selection, selected_language):
             ],
         )
         return response.choices[0].message.content    
+
+# Function to summarize the blog to create a short tweet, it work for both OpenAI and Azure OpenAI
+def summarise_tweet(input_text, client, service_selection, selected_language):
+   # Combine the selected languages into a string, or default to "English" if none selected
+    language = ", ".join(selected_language) if selected_language else "English"
+    if service_selection == "OpenAI":
+        # OpenAI API call
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are responsible for creating a short tweet in {language} for a Threat Analyst. Write a tweet summary that contains maximum 250 symbols and will summarize the main topic and the key findings relevant for a threat analyst. you can add an emoji. add tag #timindmap"
+                },
+                {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
+    elif service_selection == "Azure OpenAI":
+        # Azure OpenAI API call
+        response = client.chat.completions.create(
+            model = deployment_name,
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are responsible for creating a short tweet in {language} for a Threat Analyst. Write a tweet summary that contains maximum 250 symbols and will summarize the main topic and the key findings relevant for a threat analyst. you can add an emoji. add tag #timindmap"
+                },
+                {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content  
+
+
 
 # Function to check if content is related to cybersecurity
 def check_content_relevance(input_text, client, service_selection):
@@ -129,6 +237,55 @@ def run_models(input_text, client, selected_language):
         )
         return response.choices[0].message.content
 
+# Function to generate a mindmap
+def run_models_tweet(input_text, client, selected_language):
+    # Combine the selected languages into a string, or default to "English" if none selected
+    language = ", ".join(selected_language) if selected_language else "English"
+    if service_selection == "OpenAI":
+        # OpenAI API call
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are tasked with creating an mindmap in {language} language designed specifically for a threat analyst. This mindmap aims to visually organize 4-5 key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz"
+                },
+                {
+                    "role":"user",
+                    "content":"Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
+                },
+                {
+                    "role":"assistant",
+                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
+                },
+		        {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
+    elif service_selection == "Azure OpenAI":
+        # Azure OpenAI API call
+        response = client.chat.completions.create(
+            model = deployment_name,
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are tasked with creating an in-depth mindmap {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz"
+                },
+                {
+                    "role":"user",
+                    "content":"Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
+                },
+                {
+                    "role":"assistant",
+                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
+                },
+		        {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
+
+
+
 # Function to extract IOCs   
 def extract_iocs(input_text, client, service_selection):
     prompt = "You are tasked with extracting IOCs from the following blog post for a threat analyst. Provide a structured, table-like format, with rows separated by newlines and columns by commas with the following rows: Indicator, Type, Description. Extract indicators just if you are able to find them in the blog post provided. With reference to IP addresses, URLs, and domains, remove square brackets. Examples: tech[.]micrsofts[.]com will be tech.micrsofts.com and 27.102.113.93\n\n" + input_text
@@ -186,7 +343,7 @@ with st.sidebar:
     # List of options for the language dropdown menu
     options = ["English", "Italian", "Spanish", "French", "Arabic"]
     # Create a multi-select dropdown menu
-    selected_language = st.multiselect("Select the language into which you want to translate the recap and mindmap of your input:", options)
+    selected_language = st.multiselect("Select the language into which you want to translate the recap and mindmap of your input:", options, default=["English"])
 
     service_selection = st.sidebar.radio(
         "Select AI Service",
@@ -272,8 +429,21 @@ with col2:
 
 # Form for URL input
 form = st.form("Form to run", clear_on_submit=True)
-url = form.text_input("Enter your URL below:", placeholder="Paste any URL of your choice")
-submit_button = form.form_submit_button("Generate Summary and Mindmap")
+default_url = ""
+url = form.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
+
+# Create columns for buttons and checkboxes
+cols = form.columns(2)
+
+with cols[0]:
+    submit_button = form.form_submit_button("Generate")
+    
+with cols[1]:
+    submit_cb_summary = form.checkbox("Summary and MindMap",value=True)
+    submit_cb_tweet = form.checkbox("I want to tweet mindmap",value=True)
+
+user_input=""
+
 
 if submit_button and client:
     text = scrape_text(url)
@@ -286,16 +456,43 @@ if submit_button and client:
         input_text = "Generate a Mermaid.js mindmap only using the text below:\n" + text
         with st.expander("See full article"):
             st.write(text)
-        with st.spinner("Generating Summary "):
-            summary = summarise(text, client, service_selection, selected_language)
-            st.write("### OpenAI Generated Summary")
-            st.write(summary)
-        with st.spinner("Generating Mermaid Code"):
-            mindmap_code = run_models(input_text, client, selected_language)
-            with st.expander("See OpenAI Generated Mermaid Code"):
-                st.code(mindmap_code)
-            html(mermaid_chart(mindmap_code), width=1500, height=1500)   
-    # Extracting IOCs and displaying them as a table
+
+        if submit_cb_summary:
+            with st.spinner("Generating Summary "):
+                summary = summarise(text, client, service_selection, selected_language)
+                st.write("### OpenAI Generated Summary")
+                st.write(summary) 
+
+                with st.spinner("Generating Mermaid Code"):
+                    mindmap_code = run_models(input_text, client, selected_language)
+                    html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
+                with st.expander("See OpenAI Generated Mermaid Code"):
+                    st.code(mindmap_code) 
+
+        if submit_cb_tweet:
+            with st.spinner("Generating Tweet"):    
+                summary_tweet = summarise_tweet(text, client, service_selection, selected_language)
+                st.write("### OpenAI Generated Tweet")
+                user_input = st.text_area("Edit your tweet:", summary_tweet, height=100)
+                #num_symbols = len(user_input)
+                #st.write(summary_tweet)  
+
+                if submit_cb_summary == False:
+                    with st.spinner("Generating Mermaid Tweet Code"):
+                        mindmap_code = run_models_tweet(input_text, client, selected_language)
+                        html(mermaid_chart_png(mindmap_code), width=800, height=800)
+
+                # URL you want to open
+                url = f"https://twitter.com/intent/tweet?text={urllib.parse.quote((user_input+' '+url))}"
+                # Label for the button
+                button_label = "Tweet it"
+                # Text to display before the button
+                instruction_text = "1.Save Mindmap above<br>   2.Click it "
+                instruction_text2 = "<br> 3. Add saved mindmap to your tweet"
+                # Create text and a button in Streamlit to open the link
+                st.markdown(f'{instruction_text} <a href="{url}" target="_blank"><button>{button_label}</button></a>{instruction_text2}', unsafe_allow_html=True)
+        
+        # Extracting IOCs and displaying them as a table
         with st.spinner("Extracting IOCs"):
             iocs_df = extract_iocs(text, client, service_selection)
             if isinstance(iocs_df, pd.DataFrame):
@@ -305,3 +502,4 @@ if submit_button and client:
                 st.error(iocs_df)
 elif submit_button and not client:
     st.error("Please enter a valid OpenAI API key to generate the mindmap.")
+
