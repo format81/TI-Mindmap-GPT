@@ -6,6 +6,7 @@ from openai import AzureOpenAI
 import streamlit as st
 from streamlit.components.v1 import html
 import pandas as pd
+import urllib.parse
 
 def scrape_text(url):
     # Send a GET request to the URL
@@ -201,7 +202,7 @@ def run_models(input_text, client, selected_language):
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz"
+                    "content": f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz \n13 When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n14 Instead of using following approach (Indicators of compromise (IOC) provided) use this: (Indicators of compromise - IOC - provided)"
                 },
                 {
                     "role":"user",
@@ -222,7 +223,7 @@ def run_models(input_text, client, selected_language):
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are tasked with creating an in-depth mindmap {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz"
+                    "content": f"You are tasked with creating an in-depth mindmap {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz \n13 When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text Instead of using following approach (Indicators of compromise (IOC) provided) use this: (Indicators of compromise - IOC - provided)."
                 },
                 {
                     "role":"user",
@@ -248,7 +249,7 @@ def run_models_tweet(input_text, client, selected_language):
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are tasked with creating an mindmap in {language} language designed specifically for a threat analyst. This mindmap aims to visually organize 4-5 key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz"
+                    "content": f"You are tasked with creating an mindmap in {language} language designed specifically for a threat analyst. This mindmap aims to visually organize 3 or 4 brances or key findings and crucial highlights from the text, considering each branch cannot have more than 2 subbranches. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz \n13 When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text."
                 },
                 {
                     "role":"user",
@@ -256,7 +257,7 @@ def run_models_tweet(input_text, client, selected_language):
                 },
                 {
                     "role":"assistant",
-                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
+                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Disguise)\n       ::icon(fa fa-crosshairs)\n      (Presumed origin: Kazakhstan)\n      (Disguises attacks as from Azerbaijan)\n    (TTPs and Language Use)\n      ::icon(fa fa-tactics)\n      (Uses VPNs and spear phishing)\n      (Languages: Kazakh, Russian, Azerbaijani, Uzbek)\n    (Malware Evolution)\n      ::icon(fa fa-bug)\n      (From commodity to custom malware)\n      (Platforms: Python, PowerShell, GoLang, Rust)\n"
                 },
 		        {"role": "user", "content": input_text},
             ],
@@ -269,7 +270,7 @@ def run_models_tweet(input_text, client, selected_language):
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are tasked with creating an in-depth mindmap {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz"
+                    "content": f"You are tasked with creating an in-depth mindmap {language} language designed specifically for a threat analyst. This mindmap aims to visually organize 3 or 4 brances or key findings and crucial highlights from the text, considering each branch cannot have more than 2 subbranches. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz \n13 When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text."
                 },
                 {
                     "role":"user",
@@ -277,7 +278,7 @@ def run_models_tweet(input_text, client, selected_language):
                 },
                 {
                     "role":"assistant",
-                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
+                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Disguise)\n       ::icon(fa fa-crosshairs)\n      (Presumed origin: Kazakhstan)\n      (Disguises attacks as from Azerbaijan)\n    (TTPs and Language Use)\n      ::icon(fa fa-tactics)\n      (Uses VPNs and spear phishing)\n      (Languages: Kazakh, Russian, Azerbaijani, Uzbek)\n    (Malware Evolution)\n      ::icon(fa fa-bug)\n      (From commodity to custom malware)\n      (Platforms: Python, PowerShell, GoLang, Rust)\n"
                 },
 		        {"role": "user", "content": input_text},
             ],
@@ -330,9 +331,10 @@ st.set_page_config(
 # Sidebar for OpenAI API Key
 with st.sidebar:
     st.markdown(
-        "Welcome to TI MINDMAP GPT, an AI-powered tool designed to help producing Threat Intelligence recap, Mindmap and IOCs extraction."
+        "Welcome to TI MINDMAP, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more."
     )
     st.markdown("Created by [Antonio Formato](https://www.linkedin.com/in/antonioformato/).")
+    st.markdown("Contributor [Oleksiy Meletskiy](https://www.linkedin.com/in/alecm/).")
     # Add "Star on GitHub"
     st.sidebar.markdown(
         "⭐ Star on GitHub: [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
@@ -406,7 +408,8 @@ with st.sidebar:
         "4) [Secure List by Kaspersky](https://securelist.com/category/apt-reports/)\n" +
         "5) [Mandiant](https://www.mandiant.com/resources/blog/)\n" +
         "6) [Symantec](https://symantec-enterprise-blogs.security.com/blogs/threat-intelligence)\n" +
-        "6) [SentinelOne](https://it.sentinelone.com/blog/)"
+        "6) [SentinelOne](https://it.sentinelone.com/blog/)\n" +
+        "7) [Splunk Securiy Blog](https://www.splunk.com/en_us/blog/security.html)"
     )
 
 # Initialize OpenAI/Azure OpenAI client only if API key is provided
@@ -423,9 +426,9 @@ elif service_selection == "Azure OpenAI" and azure_api_key:
 # Main UI
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    st.title("TI MINDMAP GPT")
+    st.title("TI MINDMAP")
 with col2:
-    st.image("logoTIMINDMAPGPT.png", width=450)
+    st.image("logoTIMINDMAPGPT.png", width=150)
 
 # Form for URL input
 form = st.form("Form to run", clear_on_submit=True)
@@ -440,7 +443,8 @@ with cols[0]:
     
 with cols[1]:
     submit_cb_summary = form.checkbox("Summary and MindMap",value=True)
-    submit_cb_tweet = form.checkbox("I want to tweet mindmap",value=True)
+    submit_cb_tweet = form.checkbox("I want to tweet MindMap",value=True)
+    submit_cb_ioc = form.checkbox("I want to extract IOCs (if present)",value=True)
 
 user_input=""
 
@@ -453,10 +457,11 @@ if submit_button and client:
         st.write(f"**Content not related to cybersecurity**, It's about {relevance_check}")
     else:
         # If related, proceed with summary and mindmap generation
-        input_text = "Generate a Mermaid.js mindmap only using the text below:\n" + text
+        input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text
         with st.expander("See full article"):
             st.write(text)
 
+        # Generate Summary and Mindmap
         if submit_cb_summary:
             with st.spinner("Generating Summary "):
                 summary = summarise(text, client, service_selection, selected_language)
@@ -469,6 +474,7 @@ if submit_button and client:
                 with st.expander("See OpenAI Generated Mermaid Code"):
                     st.code(mindmap_code) 
 
+        #Generate tweet
         if submit_cb_tweet:
             with st.spinner("Generating Tweet"):    
                 summary_tweet = summarise_tweet(text, client, service_selection, selected_language)
@@ -480,7 +486,9 @@ if submit_button and client:
                 if submit_cb_summary == False:
                     with st.spinner("Generating Mermaid Tweet Code"):
                         mindmap_code = run_models_tweet(input_text, client, selected_language)
-                        html(mermaid_chart_png(mindmap_code), width=800, height=800)
+                        html(mermaid_chart_png(mindmap_code), width=600, height=600)
+                    with st.expander("See OpenAI Generated Mermaid Code - sorter version"):
+                        st.code(mindmap_code)
 
                 # URL you want to open
                 url = f"https://twitter.com/intent/tweet?text={urllib.parse.quote((user_input+' '+url))}"
@@ -493,13 +501,13 @@ if submit_button and client:
                 st.markdown(f'{instruction_text} <a href="{url}" target="_blank"><button>{button_label}</button></a>{instruction_text2}', unsafe_allow_html=True)
         
         # Extracting IOCs and displaying them as a table
-        with st.spinner("Extracting IOCs"):
-            iocs_df = extract_iocs(text, client, service_selection)
-            if isinstance(iocs_df, pd.DataFrame):
-                st.write("### Extracted IOCs")
-                st.dataframe(iocs_df)
-            else:
-                st.error(iocs_df)
+        if submit_cb_ioc:
+            with st.spinner("Extracting IOCs"):
+                iocs_df = extract_iocs(text, client, service_selection)
+                if isinstance(iocs_df, pd.DataFrame):
+                    st.write("### Extracted IOCs")
+                    st.dataframe(iocs_df)
+                else:
+                    st.error(iocs_df)
 elif submit_button and not client:
     st.error("Please enter a valid OpenAI API key to generate the mindmap.")
-
