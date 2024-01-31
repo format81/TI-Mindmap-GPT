@@ -7,6 +7,9 @@ import streamlit as st
 from streamlit.components.v1 import html
 import pandas as pd
 import urllib.parse
+import os
+from uuid import uuid4
+import base64
 
 def scrape_text(url):
     # Send a GET request to the URL
@@ -285,8 +288,6 @@ def run_models_tweet(input_text, client, selected_language):
         )
         return response.choices[0].message.content
 
-
-
 # Function to extract IOCs   
 def extract_iocs(input_text, client, service_selection):
     prompt = "You are tasked with extracting IOCs from the following blog post for a threat analyst. Provide a structured, table-like format, with rows separated by newlines and columns by commas with the following rows: Indicator, Type, Description. Extract indicators just if you are able to find them in the blog post provided. With reference to IP addresses, URLs, and domains, remove square brackets. Examples: tech[.]micrsofts[.]com will be tech.micrsofts.com and 27.102.113.93\n\n" + input_text
@@ -319,6 +320,270 @@ def extract_iocs(input_text, client, service_selection):
     except Exception as e:
         return f"Failed to extract and parse IOCs: {e}"
 
+
+#Function to provide TTPs (tactics and techniques) table from the scraped text
+def ttp(text, client):
+  response = client.chat.completions.create(
+      model = deployment_name,
+      messages=[
+          {"role": "system", "content": "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."},
+          {"role": "user", "content": f"With reference to ATT&CK Matrix for Enterprise extract TTPs (tactics and techniques) from text at the end of following prompt. For each techniques try to provide techniqueID, tactic, comment if you can get relevant content from text, producing a table with following columns:  technique, technique ID, tactic, comment. Text to work with: {text}"}
+      ]
+  )
+  return response.choices[0].message.content
+
+# ------------------ prompt variables ----------------------------#
+prompt_table = """
+| Technique                                | Technique ID | Tactic           | Comment                                                                                                      |
+|------------------------------------------|--------------|------------------|--------------------------------------------------------------------------------------------------------------|
+| Used CVE-2021-44228 for initial access.   | T1190        | Initial Access   | Used CVE-2021-44228 to exploit publicly exposed servers for initial access.                                  |
+| Used commands and scripts for execution.  | T1059        | Execution        | Used commands and scripts (like PowerShell and BAT) to execute different operations.                         |
+| Used NineRAT for persistence.             | T1543        | Persistence      | Used NineRAT to set up persistence by creating services using BAT scripts.                                     |
+| NineRAT dropper deletes itself for defense evasion. | T1140 | Defense Evasion  | NineRAT has a dropper binary containing two other components, written to disk, and the dropper deletes itself to avoid detection. |
+| Used Telegram for command and control.   | T1102        | Command and Control | Used Telegram bots and channels for C2 communications.                                                       |
+| Used commands for system information discovery. | T1082 | Discovery        | Used commands like "whoami," "ver," "getmac" for system information discovery.                                |
+| Used NineRAT for data collection.         | T1005        | Collection       | NineRAT is used to collect data from the local system.                                                        |
+"""
+
+prompt_response = """
+{
+  "name": "Lazarus Group TTPs",
+  "versions": {
+    "attack": "14",
+    "navigator": "4.9.1",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "TTPs identified in Lazarus Group's Operation Blacksmith",
+  "filters": {
+    "platforms": ["windows"]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": false,
+    "showName": true,
+    "showAggregateScores": false,
+    "countUnscored": false,
+    "expandedSubtechniques": "none"
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1190",
+      "tactic": "initial-access",
+      "color": "",
+      "comment": "Used CVE-2021-44228 to exploit publicly exposed servers for initial access.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059",
+      "tactic": "execution",
+      "color": "",
+      "comment": "Used commands and scripts (like PowerShell and BAT) to execute different operations",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1543",
+      "tactic": "persistence",
+      "color": "",
+      "comment": "Used NineRAT to set up persistence by creating services using BAT scripts.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1140",
+      "tactic": "defense-evasion",
+      "color": "",
+      "comment": "NineRAT has a dropper binary containing two other components, which are written to disk and the dropper deletes itself to avoid detection.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1102",
+      "tactic": "command-and-control",
+      "color": "",
+      "comment": "Used Telegram bots and channels for C2 communications.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1082",
+      "tactic": "discovery",
+      "color": "",
+      "comment": "Used commands like \"whoami\", \"ver\", \"getmac\" for system information discovery.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1005",
+      "tactic": "collection",
+      "color": "",
+      "comment": "NineRAT is used to collect data from the local system.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6666", "#ffe766", "#8ec843"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [],
+  "metadata": [],
+  "links": [],
+  "showTacticRowBackground": false,
+  "tacticRowBackground": "#dddddd"
+}
+"""
+
+ttps_timeline = """
+1. Initial Access: Exploitation of Remote Services [T1210]
+2. Execution: Command and Scripting Interpreter: PowerShell [T1059.001]  
+3. Persistence: External Remote Services [T1133]
+4. Persistence: Server Software Component: Web Shell [T1505.003]
+5. Persistence: Account Creation [T1136]
+6. Defense Evasion: Use Alternate Authentication Material [T1550]
+7. Defense Evasion: Modify Registry [T1112]
+8. Defense Evasion: Indicator Removal on Host: File Deletion [T1070.004]
+9. Credential Access: OS Credential Dumping [T1003]
+10. Discovery: System Information Discovery [T1082]
+11. Collection: Data Staged: Local Data Staging [T1074.001]
+12. Command and Control: Remote Access Tools [-]
+13. Command and Control: Proxy: Multi-hop Proxy [T1090.003]
+14. Command and Control: Application Layer Protocol: Web Protocols [T1071.001]
+15. Command and Control: Ingress Tool Transfer [T1105]
+16. Impact: Data Encrypted for Impact [T1486]
+"""
+
+mermaid_timeline = """
+timeline
+title Lazarus Group Operation Blacksmith
+    Initial Access
+    : Exploitation of Remote Services - [T1210]
+	Execution
+    : Command and Scripting Interpreter - PowerShell - [T1059.001]  
+    Persistence
+    : External Remote Services - [T1133]
+	: Server Software Component - Web Shell - [T1505.003]
+	: Account Creation - [T1136]
+	Defense Evasion
+	: Use Alternate Authentication Material - [T1550]
+	: Modify Registry - [T1112]
+	: Indicator Removal on Host - File Deletion - [T1070.004]
+	Credential Access
+    : OS Credential Dumping - [T1003]
+    Discovery
+    : System Information Discovery - [T1082]
+    Collection: Data Staged - Local Data Staging - [T1074.001]
+	Command and Control
+    : Remote Access Tools - [-]
+    : Proxy Multi-hop Proxy - [T1090.003]
+    : Application Layer Protocol Web Protocols - [T1071.001]
+	: Ingress Tool Transfer - [T1105]
+    Impact: Data Encrypted for Impact - [T1486]
+"""
+
+#Function to provide ATT&CK Matrix for Enterprise layer json file
+def attack_layer(text, client):
+  response = client.chat.completions.create(
+      model = deployment_name, 
+      messages=[
+                  {
+                      "role": "system",
+                      "content": f"You are tasked with creating an ATT&CK Matrix for Enterprise layer json file with attack version 14, navigator 4.9.1, layer version 4.5 to load a layer in MITRE ATT&CK Navigator. Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain filed use enterprise-attack."
+                  },
+                  {
+                      "role":"user",
+                      "content":f"Title:  Enterprise techniques used by 2015 Ukraine Electric Power Attack, ATT&CK campaign C0028 (v1.0): Table: {prompt_table}"
+                  },
+                  {
+                      "role":"assistant",
+                      "content":f"{prompt_response}"
+                  }
+              ]
+  )
+  return response.choices[0].message.content
+
+#Function to provide a list of TTPs order by execution time
+def ttp_list(text, ttptable, client):
+    response = client.chat.completions.create(
+        model = deployment_name,
+        messages=[
+            {"role": "system", "content": "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."},
+            {"role": "user", "content": f"Based on {text} and {ttptable} provide a list of TTPs order by execution time, Each line must include only Tactic and Subtactic, IDs between brackets after subtactic."}
+        ]
+    )
+
+    return response.choices[0].message.content
+
+mermaid_timeline = """
+timeline
+title Lazarus Group Operation Blacksmith
+    Initial Access
+    : Exploitation of Remote Services - [T1210]
+	Execution
+    : Command and Scripting Interpreter - PowerShell - [T1059.001]  
+    Persistence
+    : External Remote Services - [T1133]
+	: Server Software Component - Web Shell - [T1505.003]
+	: Account Creation - [T1136]
+	Defense Evasion
+	: Use Alternate Authentication Material - [T1550]
+	: Modify Registry - [T1112]
+	: Indicator Removal on Host - File Deletion - [T1070.004]
+	Credential Access
+    : OS Credential Dumping - [T1003]
+    Discovery
+    : System Information Discovery - [T1082]
+    Collection: Data Staged - Local Data Staging - [T1074.001]
+	Command and Control
+    : Remote Access Tools - [-]
+    : Proxy Multi-hop Proxy - [T1090.003]
+    : Application Layer Protocol Web Protocols - [T1071.001]
+	: Ingress Tool Transfer - [T1105]
+    Impact: Data Encrypted for Impact - [T1486]
+"""
+
+#Function to generate attack timeline Mermaid.js code 
+def ttp_graph_timeline(text, client):
+    response = client.chat.completions.create(
+        model = deployment_name, 
+        messages=[
+                    {
+                        "role":"user",
+                        "content":f"Write a Mermaid.js timeline graph that illustrates the stages of a cyber attack whose TTPs timeline is as follows: {text} . As an example condider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. Use the following guidalines to generate code: \n1. timeline: This keyword starts the timeline graph definition, \n2. title: This keyword is followed by the title of the timeline graph, \n3. Each timeline step is defined on a separate line and starts with a description of the step. The description should be concise and informative, summarizing the key actions or events of the step, \n4. The description is followed by a colon (:) and then the step details, \n5. The step details can include any additional information about the step, such as the specific tools or techniques used. \n6. Optionally, the step details can include a reference to a malleable threat technique ID using square brackets. \n7 avoid provide days after TTP ID. \n8 Provide just mermaid.js code without any other text. \n9 start code with timeline- \n10 don't use any bracket at the benning and the end of your output "
+                    }
+                ]    
+    )
+
+    return response.choices[0].message.content
+
+def mermaid_timeline_graph(mindmap_code_timeline):
+    html_code = f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <div class="mermaid">{mindmap_code_timeline}</div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({{startOnLoad:true}});</script>
+    """
+    return html_code
 
 # ------------------ Streamlit UI Configuration ------------------ #
 st.set_page_config(
@@ -445,6 +710,9 @@ with cols[1]:
     submit_cb_summary = form.checkbox("Summary and MindMap",value=True)
     submit_cb_tweet = form.checkbox("I want to tweet MindMap",value=True)
     submit_cb_ioc = form.checkbox("I want to extract IOCs (if present)",value=True)
+    submit_cb_ttps = form.checkbox("Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
+    submit_cb_ttps_by_time = form.checkbox("TTPs ordered by execution time",value=True)
+    submit_cb_ttps_timeline = form.checkbox("TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
 
 user_input=""
 
@@ -509,5 +777,28 @@ if submit_button and client:
                     st.dataframe(iocs_df)
                 else:
                     st.error(iocs_df)
+
+        # Extracting IOCs and displaying them as a table
+        if submit_cb_ttps:
+           with st.spinner("Extractiong TTPs (tactics and techniques) table from the scraped text"):
+               ttptable = ttp(text, client)  # Assign the output of ttp to ttptable
+               st.write("### TTPs table")
+               st.write(ttptable)
+        
+        # Extracting IOCs and displaying them as a table
+        if submit_cb_ttps_by_time:
+            with st.spinner("TTPs ordered by execution time"):
+                attackpath = ttp_list(text, ttptable, client)
+                st.write("### TTPs ordered by execution time")
+                st.write(attackpath)
+
+        # Mermaid TTPs timeline
+        if submit_cb_ttps_timeline:
+            with st.spinner("Mermaid TTPs Timeline"):
+                mermaid_timeline = ttp_graph_timeline(text, client)
+                st.write("### Mermaid TTPs Timeline")
+                st.write(mermaid_timeline)
+                html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
+
 elif submit_button and not client:
     st.error("Please enter a valid OpenAI API key to generate the mindmap.")
