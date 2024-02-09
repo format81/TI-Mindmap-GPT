@@ -14,7 +14,7 @@ import base64
 def scrape_text(url):
     # Send a GET request to the URL
     response = requests.get(url)
-
+    
     # If the GET request is successful, the status code will be 200
     if response.status_code == 200:
         # Get the content of the response
@@ -141,7 +141,7 @@ def summarise(input_text, client, service_selection, selected_language):
                 {"role": "user", "content": input_text},
             ],
         )
-        return response.choices[0].message.content    
+        return response.choices[0].message.content 
 
 # Function to summarize the blog to create a short tweet, it work for both OpenAI and Azure OpenAI
 def summarise_tweet(input_text, client, service_selection, selected_language):
@@ -198,23 +198,41 @@ def check_content_relevance(input_text, client, service_selection):
 def run_models(input_text, client, selected_language):
     # Combine the selected languages into a string, or default to "English" if none selected
     language = ", ".join(selected_language) if selected_language else "English"
+    # Define the SYSTEM prompt with guidelines for creating the mindmap
+    system_prompt = (
+        f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. "
+        "This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
+        "1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code. \n"
+        "2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes. \n"
+        "3. Incorporate icons where suitable to enhance readability and comprehension. \n"
+        "4. You MUST use single parentheses around each node to give them a rounded shape. \n"
+        "5. Avoid using icons and emojis. \n "
+        "6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields. \n "
+        "7. Start mermaid code with word mindmap, don't use anythong else in first line. \n "
+        "8. Don't write ``` as the first and last line. \n"
+        "9. Avoid using a line with style root. \n"
+        "10. Avoid closing with any comment starting with #. \n"
+        "11. Do not use theme as the second line; the second line must start with root syntax. \n"
+        "12. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
+        "13. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n"
+        "14. Instead of using the following approach (Indicators of compromise (IOC) provided), use this: (Indicators of compromise - IOC - provided). \n"
+    )
+    # Define the USER prompt
+    user_prompt = (
+        "Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
+    )
+    # Define the ASSISTANT prompt
+    assistant_prompt = (
+        "mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
+    )
     if service_selection == "OpenAI":
         # OpenAI API call
         response = client.chat.completions.create(
             model="gpt-4-1106-preview",
             messages=[
-                {
-                    "role": "system",
-                    "content": f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz \n13 When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n14 Instead of using following approach (Indicators of compromise (IOC) provided) use this: (Indicators of compromise - IOC - provided)"
-                },
-                {
-                    "role":"user",
-                    "content":"Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
-                },
-                {
-                    "role":"assistant",
-                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+                {"role": "assistant", "content": assistant_prompt},
 		        {"role": "user", "content": input_text},
             ],
         )
@@ -224,18 +242,9 @@ def run_models(input_text, client, selected_language):
         response = client.chat.completions.create(
             model = deployment_name,
             messages=[
-                {
-                    "role": "system",
-                    "content": f"You are tasked with creating an in-depth mindmap {language} language designed specifically for a threat analyst. This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in english but apply approach to {language}: \n1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code 2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes \n3. Incorporate icons where suitable to enhance readability and comprehension\n4. Use single parentheses around each node to give them a rounded shape.\n5. avoid using icons and emoji\n6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields.\n7 Start mermaid code with 'mindmap', not use as first line \n8 Don't write ``` as last line. \n9 Avoid use line with style root. \n10 Avoid close with any comment starting with # . \n11 not use theme as second line, second line must start with root syntax. \n12 special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz \n13 When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text Instead of using following approach (Indicators of compromise (IOC) provided) use this: (Indicators of compromise - IOC - provided)."
-                },
-                {
-                    "role":"user",
-                    "content":"Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
-                },
-                {
-                    "role":"assistant",
-                    "content":"mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+                {"role": "assistant", "content": assistant_prompt},
 		        {"role": "user", "content": input_text},
             ],
         )
@@ -315,7 +324,12 @@ def extract_iocs(input_text, client, service_selection):
         response_content = response.choices[0].message.content
         # Parse the response content into a DataFrame
         data = [line.split(",") for line in response_content.strip().split("\n")]
-        df = pd.DataFrame(data[1:], columns=data[0])
+        #df = pd.DataFrame(data[1:], columns=data[0])
+        #return df
+        max_columns = max(len(row) for row in data)
+        standardized_data = [row + [''] * (max_columns - len(row)) for row in data]
+
+        df = pd.DataFrame(standardized_data[1:], columns=standardized_data[0])
         return df
     except Exception as e:
         return f"Failed to extract and parse IOCs: {e}"
@@ -323,14 +337,38 @@ def extract_iocs(input_text, client, service_selection):
 
 #Function to provide TTPs (tactics and techniques) table from the scraped text
 def ttp(text, client):
-  response = client.chat.completions.create(
-      model = deployment_name,
-      messages=[
-          {"role": "system", "content": "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."},
-          {"role": "user", "content": f"With reference to ATT&CK Matrix for Enterprise extract TTPs (tactics and techniques) from text at the end of following prompt. For each techniques try to provide techniqueID, tactic, comment if you can get relevant content from text, producing a table with following columns:  technique, technique ID, tactic, comment. Text to work with: {text}"}
-      ]
+  # Define the SYSTEM prompt with guidelines for creating the mindmap
+  system_prompt_ttp = (
+        "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."
   )
-  return response.choices[0].message.content
+    # Define the USER prompt
+  user_prompt_ttp = (
+        f"With reference to ATT&CK Matrix for Enterprise extract TTPs (tactics and techniques) from text at the end of following prompt. \n" 
+        "For each techniques try to provide techniqueID, tactic, comment if you can get relevant content from text, producing a table with following columns: technique, technique ID, tactic, comment. \n" 
+        "Text to work with: {text}"
+    )
+  if service_selection == "OpenAI":
+      # OpenAI API call
+    response = client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        messages=[
+            {"role": "system", "content": system_prompt_ttp},
+            {"role": "user", "content": user_prompt_ttp},
+            {"role": "user", "content": input_text},
+            ],
+        )
+    return response.choices[0].message.content
+  elif service_selection == "Azure OpenAI":
+        # Azure OpenAI API call
+        response = client.chat.completions.create(
+            model = deployment_name,
+            messages=[
+                {"role": "system", "content": system_prompt_ttp},
+                {"role": "user", "content": user_prompt_ttp},
+                {"role": "user", "content": input_text},
+                ],
+            )   
+        return response.choices[0].message.content
 
 # ------------------ prompt variables ----------------------------#
 prompt_table = """
@@ -503,79 +541,119 @@ title Lazarus Group Operation Blacksmith
 
 #Function to provide ATT&CK Matrix for Enterprise layer json file
 def attack_layer(text, client):
-  response = client.chat.completions.create(
-      model = deployment_name, 
-      messages=[
-                  {
-                      "role": "system",
-                      "content": f"You are tasked with creating an ATT&CK Matrix for Enterprise layer json file with attack version 14, navigator 4.9.1, layer version 4.5 to load a layer in MITRE ATT&CK Navigator. Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain filed use enterprise-attack."
-                  },
-                  {
-                      "role":"user",
-                      "content":f"Title:  Enterprise techniques used by 2015 Ukraine Electric Power Attack, ATT&CK campaign C0028 (v1.0): Table: {prompt_table}"
-                  },
-                  {
-                      "role":"assistant",
-                      "content":f"{prompt_response}"
-                  }
-              ]
+  # Define the SYSTEM prompt
+  system_prompt_attack_layer = (
+      f"You are tasked with creating an ATT&CK Matrix for Enterprise layer json file with attack version 14, navigator 4.9.1, layer version 4.5 to load a layer in MITRE ATT&CK Navigator. \n" 
+      "Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain field use enterprise-attack."
   )
-  return response.choices[0].message.content
+  # Define the USER prompt
+  user_prompt_attack_layer = (
+      f"Title:  Enterprise techniques used by 2015 Ukraine Electric Power Attack, ATT&CK campaign C0028 (v1.0): Table: {prompt_table}"   
+  )
+  # Define the ASSISTANT prompt
+  assistant_prompt_attack_layer = (
+      f"{prompt_response}"   
+  )
+  if service_selection == "OpenAI":
+        # OpenAI API call
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
+            messages=[
+                {"role": "system", "content": system_prompt_attack_layer},
+                {"role": "user", "content": user_prompt_attack_layer},
+                {"role": "assistant", "content": assistant_prompt_attack_layer},
+		        {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
+  elif service_selection == "Azure OpenAI":
+        # Azure OpenAI API call
+        response = client.chat.completions.create(
+            model = deployment_name,
+            messages=[
+                {"role": "system", "content": system_prompt_attack_layer},
+                {"role": "user", "content": user_prompt_attack_layer},
+                {"role": "assistant", "content": assistant_prompt_attack_layer},
+		        {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
 
 #Function to provide a list of TTPs order by execution time
 def ttp_list(text, ttptable, client):
-    response = client.chat.completions.create(
-        model = deployment_name,
-        messages=[
-            {"role": "system", "content": "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."},
-            {"role": "user", "content": f"Based on {text} and {ttptable} provide a list of TTPs order by execution time, Each line must include only Tactic and Subtactic, IDs between brackets after subtactic."}
-        ]
-    )
-
-    return response.choices[0].message.content
-
-mermaid_timeline = """
-timeline
-title Lazarus Group Operation Blacksmith
-    Initial Access
-    : Exploitation of Remote Services - [T1210]
-	Execution
-    : Command and Scripting Interpreter - PowerShell - [T1059.001]  
-    Persistence
-    : External Remote Services - [T1133]
-	: Server Software Component - Web Shell - [T1505.003]
-	: Account Creation - [T1136]
-	Defense Evasion
-	: Use Alternate Authentication Material - [T1550]
-	: Modify Registry - [T1112]
-	: Indicator Removal on Host - File Deletion - [T1070.004]
-	Credential Access
-    : OS Credential Dumping - [T1003]
-    Discovery
-    : System Information Discovery - [T1082]
-    Collection: Data Staged - Local Data Staging - [T1074.001]
-	Command and Control
-    : Remote Access Tools - [-]
-    : Proxy Multi-hop Proxy - [T1090.003]
-    : Application Layer Protocol Web Protocols - [T1071.001]
-	: Ingress Tool Transfer - [T1105]
-    Impact: Data Encrypted for Impact - [T1486]
-"""
+  # Define the SYSTEM prompt
+  system_prompt_ttp_list = (
+      "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."
+  )
+  # Define the USER prompt
+  user_prompt_ttp_list = (
+      f"Based on {text} and {ttptable} provide a list of TTPs order by execution time, Each line must include only Tactic and Subtactic, IDs between brackets after subtactic. \n" 
+      "The Enterprise tactics names as defined by the MITRE ATT&CK framework are: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact" 
+  )
+  if service_selection == "OpenAI":
+        # OpenAI API call
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
+            messages=[
+                {"role": "system", "content": system_prompt_ttp_list},
+                {"role": "user", "content": user_prompt_ttp_list},
+            ],
+        )
+        return response.choices[0].message.content
+  elif service_selection == "Azure OpenAI":
+        # Azure OpenAI API call
+        response = client.chat.completions.create(
+            model = deployment_name,
+            messages=[
+                {"role": "system", "content": system_prompt_ttp_list},
+                {"role": "user", "content": user_prompt_ttp_list},
+            ],
+        )
+        return response.choices[0].message.content
 
 #Function to generate attack timeline Mermaid.js code 
 def ttp_graph_timeline(text, client):
-    response = client.chat.completions.create(
-        model = deployment_name, 
-        messages=[
-                    {
-                        "role":"user",
-                        "content":f"Write a Mermaid.js timeline graph that illustrates the stages of a cyber attack whose TTPs timeline is as follows: {text} . As an example condider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. Use the following guidalines to generate code: \n1. timeline: This keyword starts the timeline graph definition, \n2. title: This keyword is followed by the title of the timeline graph, \n3. Each timeline step is defined on a separate line and starts with a description of the step. The description should be concise and informative, summarizing the key actions or events of the step, \n4. The description is followed by a colon (:) and then the step details, \n5. The step details can include any additional information about the step, such as the specific tools or techniques used. \n6. Optionally, the step details can include a reference to a malleable threat technique ID using square brackets. \n7 avoid provide days after TTP ID. \n8 Provide just mermaid.js code without any other text. \n9 start code with timeline- \n10 don't use any bracket at the benning and the end of your output "
-                    }
-                ]    
+  # Define the USER prompt
+  user_prompt_ttp_graph_timeline = (
+          f"Write a Mermaid.js timeline graph that illustrates the stages of a cyber attack whose TTPs timeline is as follows: {text} .\n" 
+          "As an example condider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. \n"
+          "Use the Enterprise tactics names as defined by the MITRE ATT&CK framework are: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact"
+          "Use the following guidalines to generate code: \n"
+          "1. Use keyword timeline to start the graph definition, timeline must be first word in the output, don't use anything else. \n"
+          "2. title: This keyword is followed by the title of the timeline graph \n" 
+          "3. Each timeline step is defined on a separate line and starts with a description of the step. The description should be concise and informative, summarizing the key actions or events of the step. \n"
+          "4 The description is followed by a colon (:) and then the step details \n"
+          "5. The step details can include any additional information about the step, such as the specific tools or techniques used. \n"
+          "6. Optionally, the step details can include a reference to a malleable threat technique ID using square brackets. \n"
+          "7. Avoid provide days after TTP ID. \n"
+          "8. Provide just mermaid.js code without any other text. \n"
+          "9. Start code with timeline- \n"
+          "10. Don't use any bracket at the benning and the end of your output. \n"  
+          "11. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n"
+          "12. Don't write ``` as the first and last line." 
     )
+  if service_selection == "OpenAI":
+        # OpenAI API call
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
+            messages=[
+                {"role": "user", "content": user_prompt_ttp_graph_timeline},
+                {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
+  elif service_selection == "Azure OpenAI":
+        # Azure OpenAI API call
+        response = client.chat.completions.create(
+            model = deployment_name,
+            messages=[
+                {"role": "user", "content": user_prompt_ttp_graph_timeline},
+                {"role": "user", "content": input_text},
+            ],
+        )
+        return response.choices[0].message.content
 
-    return response.choices[0].message.content
-
+#Mermaid Timeline
 def mermaid_timeline_graph(mindmap_code_timeline):
     html_code = f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
@@ -584,6 +662,8 @@ def mermaid_timeline_graph(mindmap_code_timeline):
     <script>mermaid.initialize({{startOnLoad:true}});</script>
     """
     return html_code
+
+
 
 # ------------------ Streamlit UI Configuration ------------------ #
 st.set_page_config(
@@ -658,6 +738,11 @@ with st.sidebar:
         "This project should be considered a proof of concept. You are welcome to contribute or give me feedback. Always keep in mind that AI-generated content may be incorrect."
     )
     st.markdown("""---""")
+    st.markdown(
+        "This tool is a work in progress. If you want to report a malfunction or suggest an improvement, any feedback is welcome. Write to me <a href='mailto:antonio.formato@gmail.com'>here</a> or open an issue on GitHub.",
+        unsafe_allow_html=True  # Enable HTML
+    )
+    st.markdown("""---""")
 
 # "Example" section to the sidebar
 st.sidebar.header("Usage example")
@@ -715,7 +800,6 @@ with cols[1]:
     submit_cb_ttps_timeline = form.checkbox("TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
 
 user_input=""
-
 
 if submit_button and client:
     text = scrape_text(url)
@@ -780,7 +864,7 @@ if submit_button and client:
 
         # Extracting IOCs and displaying them as a table
         if submit_cb_ttps:
-           with st.spinner("Extractiong TTPs (tactics and techniques) table from the scraped text"):
+           with st.spinner("Extracting TTPs (tactics, techniques, and procedures) table from the scraped text."):
                ttptable = ttp(text, client)  # Assign the output of ttp to ttptable
                st.write("### TTPs table")
                st.write(ttptable)
@@ -794,11 +878,11 @@ if submit_button and client:
 
         # Mermaid TTPs timeline
         if submit_cb_ttps_timeline:
-            with st.spinner("Mermaid TTPs Timeline"):
-                mermaid_timeline = ttp_graph_timeline(text, client)
-                st.write("### Mermaid TTPs Timeline")
-                st.write(mermaid_timeline)
-                html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
+            #with st.spinner("Mermaid TTPs Timeline"):
+            mermaid_timeline = ttp_graph_timeline(text, client)
+            with st.expander("See OpenAI Generated Mermaid TTPs Timeline"):
+                st.code(mermaid_timeline)
+            html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
 
 elif submit_button and not client:
     st.error("Please enter a valid OpenAI API key to generate the mindmap.")
