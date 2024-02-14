@@ -663,8 +663,6 @@ def mermaid_timeline_graph(mindmap_code_timeline):
     """
     return html_code
 
-
-
 # ------------------ Streamlit UI Configuration ------------------ #
 st.set_page_config(
     page_title="Generative AI Threat Intelligence Mindmap",
@@ -780,10 +778,14 @@ with col2:
 with col2:
     st.image("logoTIMINDMAPGPT.png", width=150)
 
+#Insert containers separated into tabs.
+tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data (future release🚧)", "🗃️ Conf file (future release🚧)", "📈 Pdf Report (future release🚧)"])
+
 # Form for URL input
-form = st.form("Form to run", clear_on_submit=True)
-default_url = ""
-url = form.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
+with tab1:
+    form = st.form("Form to run", clear_on_submit=True)
+    default_url = ""
+    url = form.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
 
 # Create columns for buttons and checkboxes
 cols = form.columns(2)
@@ -792,12 +794,12 @@ with cols[0]:
     submit_button = form.form_submit_button("Generate")
     
 with cols[1]:
-    submit_cb_summary = form.checkbox("Summary and MindMap",value=True)
-    submit_cb_tweet = form.checkbox("I want to tweet MindMap",value=True)
-    submit_cb_ioc = form.checkbox("I want to extract IOCs (if present)",value=True)
-    submit_cb_ttps = form.checkbox("Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
-    submit_cb_ttps_by_time = form.checkbox("TTPs ordered by execution time",value=True)
-    submit_cb_ttps_timeline = form.checkbox("TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
+    submit_cb_summary = form.checkbox("🗺️Summary and MindMap",value=True)
+    submit_cb_tweet = form.checkbox("📺I want to tweet MindMap",value=True)
+    submit_cb_ioc = form.checkbox("🧐I want to extract IOCs (if present)",value=True)
+    submit_cb_ttps = form.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
+    submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)
+    submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
 
 user_input=""
 
@@ -824,7 +826,7 @@ if submit_button and client:
                     mindmap_code = run_models(input_text, client, selected_language)
                     html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
                 with st.expander("See OpenAI Generated Mermaid Code"):
-                    st.code(mindmap_code) 
+                    st.code(mindmap_code)
 
         #Generate tweet
         if submit_cb_tweet:
@@ -840,7 +842,7 @@ if submit_button and client:
                         mindmap_code = run_models_tweet(input_text, client, selected_language)
                         html(mermaid_chart_png(mindmap_code), width=600, height=600)
                     with st.expander("See OpenAI Generated Mermaid Code - sorter version"):
-                        st.code(mindmap_code)
+                        st.code(mindmap_code)                       
 
                 # URL you want to open
                 url = f"https://twitter.com/intent/tweet?text={urllib.parse.quote((user_input+' '+url))}"
@@ -886,3 +888,18 @@ if submit_button and client:
 
 elif submit_button and not client:
     st.error("Please enter a valid OpenAI API key to generate the mindmap.")
+
+#TAB2
+with tab2:
+    st.write("💾 AI Chat with your data - future release🚧")
+    st.write("Work in progress")
+
+#TAB3
+with tab3:
+    st.write("🗃️ Conf file - future release🚧")
+    st.write("Work in progress")
+
+#TAB3
+with tab4:
+    st.write("📈 Pdf Report - future release🚧")
+    st.write("Work in progress")
