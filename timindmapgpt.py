@@ -9,13 +9,15 @@ import pandas as pd
 import urllib.parse
 import os
 from uuid import uuid4
-import base64
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS  
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.callbacks import get_openai_callback 
-from langchain_openai import OpenAIEmbeddings, OpenAI, AzureOpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, OpenAI as langchainOAI, AzureOpenAIEmbeddings
 from langchain_community.chat_models import AzureChatOpenAI
+import base64
+import json
+import zlib
 
 def scrape_text(url):
     # Send a GET request to the URL
@@ -694,7 +696,7 @@ def get_response(knowledge_base, query, service_selection):
     docs = knowledge_base.similarity_search(query)
     
     if service_selection == "OpenAI":
-        llm = OpenAI(openai_api_key=openai_api_key)
+        llm = langchainOAI(openai_api_key=openai_api_key)
     elif service_selection == "Azure OpenAI":
         llm = AzureChatOpenAI(model="gpt-4-32k",
                               deployment_name=deployment_name,
@@ -709,6 +711,25 @@ def get_response(knowledge_base, query, service_selection):
     with get_openai_callback() as cost:
         response = chain.invoke(input={"question": query, "input_documents": docs})
         return response["output_text"]
+    
+#Mermaid.live Code Renderer
+#Functions to render Mermaid.live url
+def js_btoa(data):
+    return base64.b64encode(data)
+
+def pako_deflate(data):
+    compress = zlib.compressobj(9, zlib.DEFLATED, 15, 8, zlib.Z_DEFAULT_STRATEGY)
+    compressed_data = compress.compress(data)
+    compressed_data += compress.flush()
+    return compressed_data
+
+def genPakoLink(graphMarkdown: str):
+    jGraph = {"code": graphMarkdown, "mermaid": {"theme": "default"}}
+    byteStr = json.dumps(jGraph).encode('utf-8')
+    deflated = pako_deflate(byteStr)
+    dEncode = js_btoa(deflated)
+    link = 'http://mermaid.live/edit#pako:' + dEncode.decode('ascii')
+    return link
 
 # ------------------ Streamlit UI Configuration ------------------ #
 st.set_page_config(
@@ -830,7 +851,7 @@ with col2:
     st.image("logoTIMINDMAPGPT.png", width=150)
 
 #Insert containers separated into tabs.
-tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data (future release🚧)", "🗃️ Conf file (future release🚧)", "📈 Pdf Report (future release🚧)"])
+tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "🗃️ Conf file (future release🚧)", "📈 Pdf Report (future release🚧)"])
 
 # Form for URL input
 with tab1:
@@ -878,6 +899,8 @@ with tab1:
                         html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
+                    mermaid_link1 = genPakoLink(mindmap_code)
+                    st.link_button("Open code in Mermaid.live", mermaid_link1)
 
             #Generate tweet
             if submit_cb_tweet:
@@ -936,6 +959,8 @@ with tab1:
                 with st.expander("See OpenAI Generated Mermaid TTPs Timeline"):
                     st.code(mermaid_timeline)
                 html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
+                mermaid_link2 = genPakoLink(mermaid_timeline)
+                st.link_button("Open code in Mermaid.live", mermaid_link2)
 
     elif submit_button and not client:
         st.error("Please enter a valid OpenAI API key to generate the mindmap.")
