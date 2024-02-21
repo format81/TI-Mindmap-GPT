@@ -4,3 +4,8 @@ cohere
 requests
 utils
 pandas
+langchain
+langchain_community
+langchain_openai
+faiss-cpu==1.7.1.post2
+urllib3
