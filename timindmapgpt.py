@@ -19,6 +19,14 @@ import base64
 import json
 import zlib
 
+#PDF imports
+import base64
+from IPython.display import Image, display
+import matplotlib.pyplot as plt
+from PIL import Image as PilImage
+import io
+from streamlit_pdf_viewer import pdf_viewer
+
 def scrape_text(url):
     # Send a GET request to the URL
     response = requests.get(url)
@@ -731,7 +739,65 @@ def genPakoLink(graphMarkdown: str):
     link = 'http://mermaid.live/edit#pako:' + dEncode.decode('ascii')
     return link
 
+
+def create_pdf_from_mermaid(graph, text_after_image, name, date):
+    # Convert the Mermaid code to an image
+    graphbytes = graph.encode("utf8")
+    base64_bytes = base64.b64encode(graphbytes)
+    base64_string = base64_bytes.decode("ascii")
+    image_url = "https://mermaid.ink/img/" + base64_string
+
+    # Download the image from the URL
+    response = requests.get(image_url)
+    image_data = response.content
+
+    # Open the image with PIL
+    image = PilImage.open(io.BytesIO(image_data))
+
+    # Create a new figure with A4 size in landscape mode
+    fig = plt.figure(figsize=(8.27, 11.69), dpi=200)  # A4 size in inches, rotated for landscape
+
+    # Add header with name and date
+    #plt.text(0.5,   1.05, f"{name} - {date}", fontsize=14, ha='center', transform=plt.gcf().transFigure)
+
+    # Adjust the figure's layout to create space on the left side
+    fig.subplots_adjust(left=0.01)  # Adjust the left margin (0.05) as needed
+    # Add the image to the figure after the text, centered
+    plt.imshow(image).set_url("https://ti-mindmap-gpt.streamlit.app/")
+    
+    plt.axis('off')  # Hide the axis
+
+
+    # Add text after the header
+    plt.text(0,   0.95, text_after_image, fontsize=12, transform=plt.gcf().transFigure)
+
+    # Adjust the layout to ensure text and image do not overlap
+    #plt.subplots_adjust(top=0.9)
+    
+    # Create a PDF from the figure
+    pdf_bytes = io.BytesIO()
+    plt.savefig(pdf_bytes, format='PDF', bbox_inches='tight')
+    pdf_bytes.seek(0)
+
+    # Close the figure to free up memory
+    plt.close(fig)
+
+    # Return the PDF bytes
+    return pdf_bytes.read()
+
+def remove_first_non_empty_line_if_mermaid(mermaid_code):
+    lines = mermaid_code.splitlines()
+    for i, line in enumerate(lines):
+        if line.strip().lower() == "mermaid":
+            lines.pop(i)  # Remove the line
+            break  # Exit the loop after removing the first matching line
+    return '\n'.join(lines)
+#----------------------------------------------------------------#
 # ------------------ Streamlit UI Configuration ------------------ #
+#----------------------------------------------------------------#
+#----------------------------------------------------------------#
+#----------------------------------------------------------------#
+#----------------------------------------------------------------#
 st.set_page_config(
     page_title="Generative AI Threat Intelligence Mindmap",
     page_icon=":brain:",
@@ -851,7 +917,7 @@ with col2:
     st.image("logoTIMINDMAPGPT.png", width=150)
 
 #Insert containers separated into tabs.
-tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "🗃️ Conf file (future release🚧)", "📈 Pdf Report (future release🚧)"])
+tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "🗃️ Conf file (future release🚧)", "📈 Pdf Report (beta release)"])
 
 # Form for URL input
 with tab1:
@@ -1009,5 +1075,52 @@ with tab3:
 
 #TAB3
 with tab4:
-    st.write("📈 Pdf Report - future release🚧")
-    st.write("Work in progress")
+    st.write("📈 Pdf Report")
+    st.write("Beta release")
+    form4 = st.form("Form to run pdf", clear_on_submit=True)
+    default_url4 = ""
+    url4 = form4.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
+   # Create columns for buttons and checkboxes
+    cols4 = form4.columns(2)
+
+    with cols4[0]:
+        submit_button4 = form4.form_submit_button("Generate PDF")
+        
+    with cols4[1]:
+        submit_cb_summary4 = form4.checkbox("🗺️Add Summary and MindMap",value=True)
+        #submit_cb_ioc4 = form4.checkbox("🧐I want to extract and add IOCs (if present)",value=True)
+        #submit_cb_ttps4 = form4.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
+        #submit_cb_ttps_by_time4 = form4.checkbox("🕰️TTPs ordered by execution time",value=True)
+        #submit_cb_ttps_timeline4 = form4.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
+    user_input=""
+
+    if submit_button4 and client:
+        text = scrape_text(url4)
+        # Check if the content is related to cybersecurity
+        relevance_check4 = check_content_relevance(text, client, service_selection)
+        if "not related to cybersecurity" in relevance_check4:
+            st.write(f"**Content not related to cybersecurity**, It's about {relevance_check}")
+        else:
+            # If related, proceed with summary and mindmap generation
+            input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text
+            with st.expander("See full article"):
+                st.write(text)
+
+            # Generate Summary and Mindmap
+            if submit_cb_summary4:
+                with st.spinner("Generating Summary "):
+                    summary = summarise(text, client, service_selection, selected_language)
+                    st.write("### OpenAI Generated Summary")
+                    st.write(summary) 
+
+                    with st.spinner("Generating Mermaid Code"):
+                        mindmap_code = run_models(input_text, client, selected_language)
+                        html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
+                    with st.expander("See OpenAI Generated Mermaid Code"):
+                        st.code(mindmap_code)
+            
+            pdf_bytes = create_pdf_from_mermaid(remove_first_non_empty_line_if_mermaid(mindmap_code), summary,"ti-mindmap-gpt.streamlit.app.pdf","")
+            st.download_button(label="Save report to disk",
+                        data=pdf_bytes,
+                        file_name="ti-mindmap-gpt.streamlit.app.pdf",
+                        mime='application/octet-stream')
