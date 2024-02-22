@@ -11,6 +11,5 @@ faiss-cpu==1.7.1.post2
 urllib3
 matplotlib
 pillow
-io
 streamlit-pdf-viewer
 ipython
