@@ -14,7 +14,8 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.callbacks import get_openai_callback 
 from langchain_openai import OpenAIEmbeddings, OpenAI as langchainOAI, AzureOpenAIEmbeddings
-from langchain_community.chat_models import AzureChatOpenAI
+from langchain_openai import AzureChatOpenAI
+#from langchain_community.chat_models import AzureChatOpenAI
 import base64
 import json
 import zlib
@@ -1041,8 +1042,11 @@ with tab2:
     if 'knowledge_base' not in st.session_state:
         st.session_state['knowledge_base'] = None
 
-    if submit_button and client:
-        text = scrape_text(url)
+    # Input for the URL of the website to scrape
+    url_chat = st.text_input("Enter the URL of the website you want to scrape", key="url_input")
+
+    if st.button("Start chat to you data", key="scrape_btn"):
+        text = scrape_text(url_chat)
         if text != "Failed to scrape the website":
             # Use the updated function that considers the AI service selection
             st.session_state['knowledge_base'] = process_text(text, service_selection)
