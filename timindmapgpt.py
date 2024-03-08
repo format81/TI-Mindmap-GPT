@@ -20,6 +20,8 @@ import base64
 import json
 import zlib
 
+import pdf
+
 #PDF imports
 import base64
 from IPython.display import Image, display
@@ -793,6 +795,25 @@ def remove_first_non_empty_line_if_mermaid(mermaid_code):
             lines.pop(i)  # Remove the line
             break  # Exit the loop after removing the first matching line
     return '\n'.join(lines)
+
+
+def add_mermaid_theme(mermaid_code, selected_theme):
+    if selected_theme == 'Default':
+        theme = 'default'
+    elif selected_theme == 'Neutral':
+        theme = 'neutral'
+    elif selected_theme == 'Dark':
+        theme = 'dark'
+    elif selected_theme == 'Forest':
+        theme = 'forest'
+    elif selected_theme == 'Custom':
+        # Add custom theme handling here if needed
+        theme = 'base'
+    else:
+        theme = 'default'  # Default theme if selected theme is not recognized
+    
+    return f"%%{{ init: {{'theme': '{theme}'}}}}%%\n{mermaid_code}"
+
 #----------------------------------------------------------------#
 # ------------------ Streamlit UI Configuration ------------------ #
 #----------------------------------------------------------------#
@@ -818,6 +839,17 @@ with st.sidebar:
         "⭐ Star on GitHub: [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
     )
     st.markdown("""---""")
+
+st.sidebar.header("Visual Mindmap Theme")
+with st.sidebar: 
+    # Define the options for the dropdown list
+    options = ['Default', 'Neutral', 'Dark', 'Forest', 'Custom']
+    # Create the dropdown list with a default value
+    selected_theme_option = st.selectbox('Select an MindMap theme:', options, index=0)
+    # Display the selected option
+
+    #st.write(f'You selected: {selected_theme_option}')
+
 st.sidebar.header("Setup")
 with st.sidebar: 
     # List of options for the language dropdown menu
@@ -867,6 +899,8 @@ with st.sidebar:
         st.markdown(
             "OpenAI model: gpt-4-1106-preview"
         )
+
+
 
 # "About" section to the sidebar
 st.sidebar.header("About")
@@ -962,7 +996,7 @@ with tab1:
                     st.write(summary) 
 
                     with st.spinner("Generating Mermaid Code"):
-                        mindmap_code = run_models(input_text, client, selected_language)
+                        mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
                         html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
@@ -980,7 +1014,7 @@ with tab1:
 
                     if submit_cb_summary == False:
                         with st.spinner("Generating Mermaid Tweet Code"):
-                            mindmap_code = run_models_tweet(input_text, client, selected_language)
+                            mindmap_code = add_mermaid_theme(run_models_tweet(input_text, client, selected_language),selected_theme_option)
                             html(mermaid_chart_png(mindmap_code), width=600, height=600)
                         with st.expander("See OpenAI Generated Mermaid Code - sorter version"):
                             st.code(mindmap_code)                       
@@ -1118,12 +1152,15 @@ with tab4:
                     st.write(summary) 
 
                     with st.spinner("Generating Mermaid Code"):
-                        mindmap_code = run_models(input_text, client, selected_language)
+                        mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
                         html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
             
-            pdf_bytes = create_pdf_from_mermaid(remove_first_non_empty_line_if_mermaid(mindmap_code), summary,"ti-mindmap-gpt.streamlit.app.pdf","")
+
+            #pdf_bytes = create_pdf_from_mermaid(remove_first_non_empty_line_if_mermaid(mindmap_code), summary,"ti-mindmap-gpt.streamlit.app.pdf","")
+            pdf_bytes = pdf.create_pdf_bytes(url4, summary, mindmap_code )
+
             st.download_button(label="Save report to disk",
                         data=pdf_bytes,
                         file_name="ti-mindmap-gpt.streamlit.app.pdf",
