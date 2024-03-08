@@ -21,6 +21,7 @@ import json
 import zlib
 
 import pdf
+import mermaid
 
 #PDF imports
 import base64
@@ -46,89 +47,6 @@ def scrape_text(url):
         return text
     else:
         return "Failed to scrape the website"
-
-def mermaid_chart(mindmap_code):
-    html_code = f"""
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <div class="mermaid">{mindmap_code}</div>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({{startOnLoad:true}});</script>
-    """
-    return html_code
-
-# with save to SVG capability
-def mermaid_chart_svg(mindmap_code):
-    html_code = f"""
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <div class="mermaid" id="mermaidChart">{mindmap_code}</div>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script>
-    mermaid.initialize({{startOnLoad:true}});
-    function downloadSVG() {{
-        var svg = document.querySelector("#mermaidChart svg");
-        var serializer = new XMLSerializer();
-        var source = serializer.serializeToString(svg);
-        var a = document.createElement("a");
-        a.href = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(source);
-        a.download = 'mindmap.svg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }}
-    </script>
-    <button onclick="downloadSVG()">Save Mindmap</button>
-    """
-    return html_code
-
-# with save to PNG capability
-def mermaid_chart_png(mindmap_code):
-    html_code = f"""
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <div class="mermaid" id="mermaidChart">{mindmap_code}</div>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script>
-    mermaid.initialize({{startOnLoad:true}});
-    function downloadPNG() {{
-        var svg = document.querySelector("#mermaidChart svg");
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
-        var data = (new XMLSerializer()).serializeToString(svg);
-        var DOMURL = window.URL || window.webkitURL || window;
-        
-        var img = new Image();
-        var svgBlob = new Blob([data], {{type: 'image/svg+xml;charset=utf-8'}});
-        var url = DOMURL.createObjectURL(svgBlob);
-        
-        img.onload = function () {{
-            ctx.canvas.width = svg.getBoundingClientRect().width;
-            ctx.canvas.height = svg.getBoundingClientRect().height;
-            ctx.drawImage(img, 0, 0);
-            DOMURL.revokeObjectURL(url);
-            
-            var imgURI = canvas
-                .toDataURL('image/png')
-                .replace('image/png', 'image/octet-stream');
-            
-            var evt = new MouseEvent('click', {{
-                view: window,
-                bubbles: false,
-                cancelable: true
-            }});
-            
-            var a = document.createElement('a');
-            a.setAttribute('download', 'mindmap.png');
-            a.setAttribute('href', imgURI);
-            a.setAttribute('target', '_blank');
-            
-            a.dispatchEvent(evt);
-        }};
-        
-        img.src = url;
-    }}
-    </script>
-    <button onclick="downloadPNG()">Save Mindmap as PNG</button>
-    """
-    return html_code
 
 
 # Function to summarize the blog, it work for both OpenAI and Azure OpenAI
@@ -997,7 +915,7 @@ with tab1:
 
                     with st.spinner("Generating Mermaid Code"):
                         mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
-                        html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
+                        html(mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
                     mermaid_link1 = genPakoLink(mindmap_code)
@@ -1153,7 +1071,7 @@ with tab4:
 
                     with st.spinner("Generating Mermaid Code"):
                         mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
-                        html(mermaid_chart_png(mindmap_code), width=1500, height=1500)
+                        html(mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
             
