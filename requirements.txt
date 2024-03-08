@@ -13,3 +13,4 @@ matplotlib
 pillow
 streamlit-pdf-viewer
 ipython
+reportlab
