@@ -20,8 +20,8 @@ import base64
 import json
 import zlib
 
-import pdf
-import mermaid
+import ti_pdf
+import ti_mermaid
 
 #PDF imports
 import base64
@@ -915,7 +915,7 @@ with tab1:
 
                     with st.spinner("Generating Mermaid Code"):
                         mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
-                        html(mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
+                        html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
                     mermaid_link1 = genPakoLink(mindmap_code)
@@ -1071,13 +1071,13 @@ with tab4:
 
                     with st.spinner("Generating Mermaid Code"):
                         mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
-                        html(mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
+                        html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
                     with st.expander("See OpenAI Generated Mermaid Code"):
                         st.code(mindmap_code)
             
 
             #pdf_bytes = create_pdf_from_mermaid(remove_first_non_empty_line_if_mermaid(mindmap_code), summary,"ti-mindmap-gpt.streamlit.app.pdf","")
-            pdf_bytes = pdf.create_pdf_bytes(url4, summary, mindmap_code )
+            pdf_bytes = ti_pdf.create_pdf_bytes(url4, summary, mindmap_code )
 
             st.download_button(label="Save report to disk",
                         data=pdf_bytes,
