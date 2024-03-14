@@ -32,8 +32,10 @@ import io
 from streamlit_pdf_viewer import pdf_viewer
 
 def scrape_text(url):
-    # Send a GET request to the URL
-    response = requests.get(url)
+    # Add user-agent to avoid issue when scrapping most website
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+    # Send a GET request to the URL	
+    response = requests.get(url, headers=headers)
     
     # If the GET request is successful, the status code will be 200
     if response.status_code == 200:
