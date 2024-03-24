@@ -1,4 +1,4 @@
-codes![TI MINDMAP GPT](logoTIMINDMAPGPT-small.png)
+![TI MINDMAP GPT](logoTIMINDMAPGPT-small.png)
 
 Welcome to TI MINDMAP GPT, an AI-powered tool designed to help producing Threat Intelligence Mindmap.
 
