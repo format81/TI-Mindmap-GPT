@@ -602,47 +602,56 @@ def mermaid_timeline_graph(mindmap_code_timeline):
     """
     return html_code
 
-# Function to process text based on user's choice of AI service
-def process_text(text, service_selection):
-    text_splitter = CharacterTextSplitter(separator="\n", chunk_size=500, chunk_overlap=100, length_function=len)
-    chunks = text_splitter.split_text(text)
+def process_text(text, service_selection): 
+    text_splitter = CharacterTextSplitter(separator="\n", chunk_size=500, chunk_overlap=100, length_function=len)  
+    chunks = text_splitter.split_text(text)  
+      
+    embeddings = []  
+    if chunks:  
+        if service_selection == "OpenAI":  
+            embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)  
+        elif service_selection == "Azure OpenAI":  
+            embeddings = AzureOpenAIEmbeddings(deployment=embedding_deployment_name,  
+                                        model="text-embedding-ada-002",  
+                                        azure_endpoint=azure_endpoint,  
+                                        api_key=azure_api_key,  
+                                        chunk_size=1,  
+                                        api_version="2024-02-15-preview")  
+        else:  
+            raise ValueError("Invalid AI service selection")  
+  
+        if not embeddings:    
+            raise ValueError("Embeddings list is empty. Please check the input text and the AI service configuration.")    
     
-    if service_selection == "OpenAI":
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-    elif service_selection == "Azure OpenAI":
-        embeddings = AzureOpenAIEmbeddings(deployment=embedding_deployment_name,
-                                      model="text-embedding-ada-002",
-                                      azure_endpoint=azure_endpoint,
-                                      api_key=azure_api_key,
-                                      chunk_size=1,
-                                      api_version="2024-02-15-preview")
-    else:
-        raise ValueError("Invalid AI service selection")
+    #st.write(f"Embeddings after generation: {embeddings}")  
 
-    knowledge_base = FAISS.from_texts(chunks, embeddings)
-    return knowledge_base
+    knowledge_base = None  
+    if embeddings:  
+        knowledge_base = FAISS.from_texts(chunks, embeddings)
+    return knowledge_base  
+
 
 # Function to get response based on user's choice of AI service
-def get_response(knowledge_base, query, service_selection):
-    docs = knowledge_base.similarity_search(query)
-    
-    if service_selection == "OpenAI":
-        llm = langchainOAI(openai_api_key=openai_api_key)
-    elif service_selection == "Azure OpenAI":
-        llm = AzureChatOpenAI(model="gpt-4-32k",
-                              deployment_name=deployment_name,
-                              api_key=azure_api_key,
-                              api_version="2023-07-01-preview",
-                              azure_endpoint=azure_endpoint
-                     )
-    else:
-        raise ValueError("Invalid AI service selection")
-
-    chain = load_qa_chain(llm, chain_type="stuff")
-    with get_openai_callback() as cost:
-        response = chain.invoke(input={"question": query, "input_documents": docs})
-        return response["output_text"]
-    
+def get_response(knowledge_base, query, service_selection):       
+    docs = knowledge_base.similarity_search(query)      
+  
+    if service_selection == "OpenAI":    
+        llm = langchainOAI(openai_api_key=openai_api_key)    
+    elif service_selection == "Azure OpenAI":    
+        llm = AzureChatOpenAI(model="gpt-4-32k",    
+                              deployment_name=deployment_name,    
+                              api_key=azure_api_key,    
+                              api_version="2023-07-01-preview",    
+                              azure_endpoint=azure_endpoint    
+                     )    
+    else:    
+        raise ValueError("Invalid AI service selection")    
+  
+    chain = load_qa_chain(llm, chain_type="stuff")    
+    with get_openai_callback() as cost:    
+        response = chain.invoke(input={"question": query, "input_documents": docs})    
+    return response["output_text"]  
+  
 #Mermaid.live Code Renderer
 #Functions to render Mermaid.live url
 def js_btoa(data):
@@ -867,37 +876,67 @@ elif service_selection == "Azure OpenAI" and azure_api_key:
 # Main UI
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
+    st.image("logoTIMINDMAPGPT.png", width=75)
     st.title("TI MINDMAP")
 with col2:
-    st.image("logoTIMINDMAPGPT.png", width=150)
-
-#Insert containers separated into tabs.
-tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "🗃️ Conf file (future release🚧)", "📈 Pdf Report (beta release)"])
-
-# Form for URL input
-with tab1:
-    form = st.form("Form to run", clear_on_submit=True)
+    form = st.form("Form to scrape", clear_on_submit=False)
     default_url = ""
     url = form.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
-
-    # Create columns for buttons and checkboxes
-    cols = form.columns(2)
-
-    with cols[0]:
-        submit_button = form.form_submit_button("Generate")
+    scrape_button = form.form_submit_button("Scrape it")
+    form.write("*By clicking 'Scrape it,' the data from any previous session is deleted, and a new working session will be started.*")
+    #st.markdown("*Session keys are retained until the entire page is refreshed.*")
     
-    with cols[1]:
-        submit_cb_summary = form.checkbox("🗺️Summary and MindMap",value=True)
-        submit_cb_tweet = form.checkbox("📺I want to tweet MindMap",value=True)
-        submit_cb_ioc = form.checkbox("🧐I want to extract IOCs (if present)",value=True)
-        submit_cb_ttps = form.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
-        submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)
-        submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
+    # Initialize variables in session state  
+    if 'text' not in st.session_state:  
+        st.session_state['text'] = ""
+    if 'chat_history' not in st.session_state:    
+        st.session_state['chat_history'] = []
+    if 'input_key' not in st.session_state:
+        st.session_state['input_key'] = 0
+  
+    if scrape_button and client:  
+        st.session_state['text'] = scrape_text(url)
+        st.session_state['url4'] = url
+        st.session_state['chat_history'] = []  # Clear chat history when new URL is scraped 
+        st.session_state['input_key'] += 1  # Increment input key to clear user input
+        st.session_state['summary'] = ""  # Clear summary when new URL is scraped  
+        st.session_state['mindmap_code'] = ""  # Clear mindmap_code when new URL is scraped
+        st.session_state['ttptable'] = ""
+        st.session_state['attackpath'] = ""
+        
+        # Check if the content is related to cybersecurity
+        #relevance_check = check_content_relevance(text2, client, service_selection)
+        #if "not related to cybersecurity" in relevance_check:
+        #    st.write(f"**Content not related to cybersecurity**, It's about {relevance_check}")
+        #else:
+        #    # If related, proceed with summary and mindmap generation
+        #    input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text
+        #    with st.expander("See full article"):
+        #st.write(text)
 
-    user_input=""
+#Insert containers separated into tabs.
+tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "📈 Pdf Report", "🗃️ Conf file (future release🚧)"])
+
+# Form for URL input
+with tab1:  
+    form = st.form("Form to run", clear_on_submit=True)  
+  
+    # Create columns for buttons and checkboxes  
+    cols = form.columns(2)  
+  
+    with cols[1]:  
+        submit_cb_summary = form.checkbox("🗺️Summary and MindMap",value=True)  
+        submit_cb_tweet = form.checkbox("📺I want to tweet MindMap",value=True)  
+        submit_cb_ioc = form.checkbox("🧐I want to extract IOCs (if present)",value=True)  
+        submit_cb_ttps = form.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)  
+        submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)  
+        submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)  
+      
+    with cols[0]:  
+        submit_button = form.form_submit_button("Generate")  
 
     if submit_button and client:
-        text = scrape_text(url)
+        text = st.session_state['text']  # Use the text stored in session state 
         # Check if the content is related to cybersecurity
         relevance_check = check_content_relevance(text, client, service_selection)
         if "not related to cybersecurity" in relevance_check:
@@ -909,19 +948,30 @@ with tab1:
                 st.write(text)
 
             # Generate Summary and Mindmap
-            if submit_cb_summary:
-                with st.spinner("Generating Summary "):
-                    summary = summarise(text, client, service_selection, selected_language)
-                    st.write("### OpenAI Generated Summary")
-                    st.write(summary) 
-
-                    with st.spinner("Generating Mermaid Code"):
-                        mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
-                        html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
-                    with st.expander("See OpenAI Generated Mermaid Code"):
-                        st.code(mindmap_code)
-                    mermaid_link1 = genPakoLink(mindmap_code)
-                    st.link_button("Open code in Mermaid.live", mermaid_link1)
+            if submit_cb_summary:    
+                with st.spinner("Generating Summary "):  
+                    # Check if summary exists in session state  
+                    if st.session_state['summary']:  
+                        summary = st.session_state['summary']  
+                    else:  
+                        summary = summarise(text, client, service_selection, selected_language)  
+                        st.session_state['summary'] = summary  
+                    st.write("### OpenAI Generated Summary")  
+                    st.write(summary)   
+  
+                    with st.spinner("Generating Mermaid Code"):  
+                        # Check if mindmap_code exists in session state  
+                        if st.session_state['mindmap_code']:  
+                            mindmap_code = st.session_state['mindmap_code']  
+                        else:  
+                            mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)  
+                            st.session_state['mindmap_code'] = mindmap_code  
+                        html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)  
+                    with st.expander("See OpenAI Generated Mermaid Code"):  
+                        st.code(mindmap_code) 
+  
+            mermaid_link1 = genPakoLink(mindmap_code)    
+            st.link_button("Open code in Mermaid.live", mermaid_link1)  
 
             #Generate tweet
             if submit_cb_tweet:
@@ -963,14 +1013,20 @@ with tab1:
             if submit_cb_ttps:
                 with st.spinner("Extracting TTPs (tactics, techniques, and procedures) table from the scraped text."):
                     ttptable = ttp(text, client)  # Assign the output of ttp to ttptable
+                    st.session_state['ttptable'] = ttptable 
                     st.write("### TTPs table")
                     st.write(ttptable)
         
-            # Extracting IOCs and displaying them as a table
+            #TTPs ordered by execution time
             if submit_cb_ttps_by_time:
                 with st.spinner("TTPs ordered by execution time"):
-                    attackpath = ttp_list(text, ttptable, client)
-                    st.write("### TTPs ordered by execution time")
+                    # Check if attackpath exists in session state 
+                    if st.session_state['attackpath']:
+                        attackpath = st.session_state['attackpath']  
+                    else:
+                        attackpath = ttp_list(text, ttptable, client)
+                        st.session_state['attackpath'] = attackpath  
+                    st.write("### TTPs ordered by execution time")  
                     st.write(attackpath)
 
             # Mermaid TTPs timeline
@@ -982,106 +1038,129 @@ with tab1:
                 html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
                 mermaid_link2 = genPakoLink(mermaid_timeline)
                 st.link_button("Open code in Mermaid.live", mermaid_link2)
-
+                
     elif submit_button and not client:
         st.error("Please enter a valid OpenAI API key to generate the mindmap.")
 
-#TAB2
+#TAB2   
 with tab2:
-    st.write("💾 AI Chat with your data 🚧")
-    # Create a container for messages
-    messages = st.container()
-
-    # Check if the knowledge base is already in the session state
-    if 'knowledge_base' not in st.session_state:
-        st.session_state['knowledge_base'] = None
-
-    # Input for the URL of the website to scrape
-    url_chat = st.text_input("Enter the URL of the website you want to scrape", key="url_input")
-
-    if st.button("Start chat to you data", key="scrape_btn"):
-        text = scrape_text(url_chat)
-        if text != "Failed to scrape the website":
-            # Use the updated function that considers the AI service selection
-            st.session_state['knowledge_base'] = process_text(text, service_selection)
-            with messages:
-                st.chat_message("assistant").write("Website content successfully processed. You can now ask questions.")
-     #check else statement to avoid Failed to scrape the website message
-     #else:
-     #   st.error("Failed to scrape the website. Please check the URL and try again.")
-
-    # Update the part where the bot's response is fetched to use the updated function
-    # Check if the knowledge base is already in the session state and a URL has been submitted
-    if 'knowledge_base' in st.session_state and st.session_state['knowledge_base'] is not None:
-        # Chat input for user's query
-        prompt = st.chat_input("Ask a question about the website content...", key="chat_input")
-
-        if prompt:  # Check if the user has entered a prompt
-            # Add user's prompt to the chat
-            with messages:
-                st.chat_message("user").write(prompt)
-
-            # Use the updated function that considers the AI service selection
-            response = get_response(st.session_state['knowledge_base'], prompt, service_selection)
-            with messages:
-                st.chat_message("assistant").write(response)
+    st.header("💾 AI Chat with your data")
+    # Process the text using the selected service
+    knowledge_base = process_text(st.session_state['text'], service_selection)
+    # Initialize chat history in session state if it does not exist  
+    if 'chat_history' not in st.session_state:  
+        st.session_state['chat_history'] = []  
+          
+    # Display the chat history  
+    for message in st.session_state['chat_history']:  
+        if message['sender'] == 'user':  
+            st.write('User: ', message['message'])  
+        else:  
+            st.write('AI: ', message['message'])  
+          
+    # Input field for user's message  
+    user_message = st.text_input("Your message:")  
+          
+    if st.button('Send'):  
+        # Update the chat history with the user's message  
+        st.session_state['chat_history'].append({'sender': 'user', 'message': user_message})  
+              
+        # Get response from the AI service  
+        ai_response = get_response(knowledge_base, user_message, service_selection)  
+              
+        # Update the chat history with the AI's response  
+        st.session_state['chat_history'].append({'sender': 'ai', 'message': ai_response})  
+              
+        # Display the AI's response  
+        st.write('AI: ', ai_response)
 
 #TAB3
 with tab3:
-    st.write("🗃️ Conf file - future release🚧")
-    st.write("Work in progress")
-
-#TAB3
-with tab4:
-    st.write("📈 Pdf Report")
-    st.write("Beta release")
-    form4 = st.form("Form to run pdf", clear_on_submit=True)
-    default_url4 = ""
-    url4 = form4.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
-   # Create columns for buttons and checkboxes
+    st.header("📈 Pdf Report")
+    form4 = st.form("Form to run pdf", clear_on_submit=False)
+    #default_url4 = ""
+    #url4 = form4.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
+    #Create columns for buttons and checkboxes
     cols4 = form4.columns(2)
 
-    with cols4[0]:
-        submit_button4 = form4.form_submit_button("Generate PDF")
+    #with cols4[0]:
+    #    submit_button4 = form4.form_submit_button("Generate PDF")
         
     with cols4[1]:
         submit_cb_summary4 = form4.checkbox("🗺️Add Summary and MindMap",value=True)
         #submit_cb_ioc4 = form4.checkbox("🧐I want to extract and add IOCs (if present)",value=True)
         #submit_cb_ttps4 = form4.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
-        #submit_cb_ttps_by_time4 = form4.checkbox("🕰️TTPs ordered by execution time",value=True)
+        submit_cb_ttps_by_time4 = form4.checkbox("🕰️TTPs ordered by execution time",value=True)
         #submit_cb_ttps_timeline4 = form4.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
-    user_input=""
+    #user_input=""
+        
+    with cols[0]:
+       submit_button4 = form4.form_submit_button("Generate PDF")
 
-    if submit_button4 and client:
-        text = scrape_text(url4)
-        # Check if the content is related to cybersecurity
-        relevance_check4 = check_content_relevance(text, client, service_selection)
-        if "not related to cybersecurity" in relevance_check4:
-            st.write(f"**Content not related to cybersecurity**, It's about {relevance_check}")
-        else:
-            # If related, proceed with summary and mindmap generation
-            input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text
-            with st.expander("See full article"):
-                st.write(text)
-
-            # Generate Summary and Mindmap
-            if submit_cb_summary4:
-                with st.spinner("Generating Summary "):
-                    summary = summarise(text, client, service_selection, selected_language)
-                    st.write("### OpenAI Generated Summary")
-                    st.write(summary) 
-
-                    with st.spinner("Generating Mermaid Code"):
-                        mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)
-                        html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)
-                    with st.expander("See OpenAI Generated Mermaid Code"):
-                        st.code(mindmap_code)
-            
+    if submit_button4 and client:  
+        text = st.session_state['text']  # Use the text stored in session state  
+        relevance_check4 = check_content_relevance(text, client, service_selection)  
+        if "not related to cybersecurity" in relevance_check4:  
+            st.write(f"**Content not related to cybersecurity**, It's about {relevance_check}")  
+        else:  
+            input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text  
+            with st.expander("See full article"):  
+                st.write(text)  
+  
+            # Generate Summary and Mindmap  
+            if submit_cb_summary4:  
+                with st.spinner("Generating Summary "):  
+                    # Check if summary exists in session state  
+                    if st.session_state['summary']:  
+                        summary = st.session_state['summary']  
+                    else:  
+                        summary = summarise(text, client, service_selection, selected_language)  
+                        st.session_state['summary'] = summary  
+                    st.write("### OpenAI Generated Summary")  
+                    st.write(summary)   
+  
+                    with st.spinner("Generating Mermaid Code"):  
+                        # Check if mindmap_code exists in session state  
+                        if st.session_state['mindmap_code']:  
+                            mindmap_code = st.session_state['mindmap_code']  
+                        else:  
+                            mindmap_code = add_mermaid_theme(run_models(input_text, client, selected_language),selected_theme_option)  
+                            st.session_state['mindmap_code'] = mindmap_code  
+                        html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)  
+                    with st.expander("See OpenAI Generated Mermaid Code"):  
+                        st.code(mindmap_code)  
+        
+            # Extracting TTPs 
+            if submit_cb_ttps_by_time4:  
+                with st.spinner("TTPs ordered by execution time"):  
+                    # Check if ttptable exists in session state  
+                    if st.session_state['ttptable']:
+                        ttptable = st.session_state['ttptable']  
+                    else:  
+                        ttptable = ttp(text, client)  # Assign the output of ttp to ttptable  
+                        st.session_state['ttptable'] = ttptable   
+                    st.write("### TTPs table")  
+                    st.write(ttptable)  
+  
+                    # Check if attackpath exists in session state  
+                    # Check if attackpath exists in session state 
+                    if st.session_state['attackpath']:
+                        attackpath = st.session_state['attackpath']  
+                    else:
+                        attackpath = ttp_list(text, ttptable, client)
+                        st.session_state['attackpath'] = attackpath  
+                    st.write("### TTPs ordered by execution time")  
+                    st.write(attackpath)
 
             #pdf_bytes = create_pdf_from_mermaid(remove_first_non_empty_line_if_mermaid(mindmap_code), summary,"ti-mindmap-gpt.streamlit.app.pdf","")
-            pdf_bytes = ti_pdf.create_pdf_bytes(url4, summary, mindmap_code )
+            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code, attackpath)
 
             st.download_button(label="Save report to disk",
                         data=pdf_bytes,
                         file_name="ti-mindmap-gpt.streamlit.app.pdf",
                         mime='application/octet-stream')
+            
+#TAB4
+with tab4:
+    st.write("🗃️ Conf file - future release🚧")
+    st.write("Work in progress")

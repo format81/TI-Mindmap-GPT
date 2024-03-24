@@ -88,7 +88,7 @@ def fit_image_to_page(image_data):
     img = Image(image_data, width=new_width, height=new_height)
     return img
 
-def create_pdf_bytes(url, content, mermaid_code):
+def create_pdf_bytes(url, content, mermaid_code, attackpath):
     # Create a BytesIO object to hold the PDF data
     pdf_bytes_io = BytesIO()
 
@@ -102,12 +102,15 @@ def create_pdf_bytes(url, content, mermaid_code):
     flowables = []
     #flowables.append(Image(download_image("https://ti-mindmap-gpt.streamlit.app/~/+/media/1c6ab33ef579e47f0f04779fb72cb18eef1dff0a7d3fc1d8026a2367.png")))# Page 1: Introduction
     flowables.append(Spacer(1, 0.1 * inch))  # Add some space after header
-    flowables.append(Paragraph("TIMINDMAP", header1_style))
-    flowables.append(Paragraph("TI MINDMAP, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more.", normal_style)) 
+    flowables.append(Paragraph("TI MINDMAP", header1_style))
+    flowables.append(Paragraph("TI MINDMAP, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more.", normal_style))
+    flowables.append(Paragraph("APP url: <link href='https://ti-mindmap-gpt.streamlit.app/'>https://ti-mindmap-gpt.streamlit.app/</link>", normal_style))
+    flowables.append(Paragraph("GitHub: <link href='https://github.com/format81/TI-Mindmap-GPT'>https://github.com/format81/TI-Mindmap-GPT</link>", normal_style))
     #flowables.append(PageBreak())  # Move to the next page
     flowables.append(Spacer(1, 0.1 * inch))  # Add some space after header
     # Page 2: Agenda
     flowables.append(Paragraph("REPORT", header1_style))
+    flowables.append(Paragraph(f"Original source: <link href='{url}'>{url}</link>", normal_style))  # Adding original source link
     
     
     italic_style = ParagraphStyle(
@@ -123,7 +126,13 @@ def create_pdf_bytes(url, content, mermaid_code):
     img = fit_image_to_page(image_data)
     flowables.append(img)
     flowables.append(Spacer(1, 0.1 * inch))  # Add some space after header
-    flowables.append(Paragraph(content, italic_style))
+    flowables.append(Paragraph(content, italic_style)) 
+    # Split the attackpath into a list of lines  
+    attackpath_lines = attackpath.split('\n')  
+    # Add attackpath to the PDF  
+    flowables.append(Paragraph("TTPs ordered by execution time", header1_style))  
+    for line in attackpath_lines:  
+        flowables.append(Paragraph(line, normal_style)) 
 
     doc.build(flowables)
 
@@ -134,5 +143,3 @@ def create_pdf_bytes(url, content, mermaid_code):
     pdf_bytes_io.close()
 
     return pdf_bytes
-
-
