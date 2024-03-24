@@ -88,7 +88,7 @@ def fit_image_to_page(image_data):
     img = Image(image_data, width=new_width, height=new_height)
     return img
 
-def create_pdf_bytes(url, content, mermaid_code):
+def create_pdf_bytes(url, content, mermaid_code, attackpath):
     # Create a BytesIO object to hold the PDF data
     pdf_bytes_io = BytesIO()
 
@@ -126,9 +126,13 @@ def create_pdf_bytes(url, content, mermaid_code):
     img = fit_image_to_page(image_data)
     flowables.append(img)
     flowables.append(Spacer(1, 0.1 * inch))  # Add some space after header
-    flowables.append(Paragraph(content, italic_style))
-    #adding ttptables
-    #flowables.append(Paragraph(ttptable, normal_style))  # Add ttptable to the PDF
+    flowables.append(Paragraph(content, italic_style)) 
+    # Split the attackpath into a list of lines  
+    attackpath_lines = attackpath.split('\n')  
+    # Add attackpath to the PDF  
+    flowables.append(Paragraph("TTPs ordered by execution time", header1_style))  
+    for line in attackpath_lines:  
+        flowables.append(Paragraph(line, normal_style)) 
 
     doc.build(flowables)
 

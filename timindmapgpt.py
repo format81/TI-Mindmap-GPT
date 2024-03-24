@@ -901,7 +901,8 @@ with col2:
         st.session_state['input_key'] += 1  # Increment input key to clear user input
         st.session_state['summary'] = ""  # Clear summary when new URL is scraped  
         st.session_state['mindmap_code'] = ""  # Clear mindmap_code when new URL is scraped
-        #st.session_state['ttptable'] = ""
+        st.session_state['ttptable'] = ""
+        st.session_state['attackpath'] = ""
         
         # Check if the content is related to cybersecurity
         #relevance_check = check_content_relevance(text2, client, service_selection)
@@ -1012,23 +1013,20 @@ with tab1:
             if submit_cb_ttps:
                 with st.spinner("Extracting TTPs (tactics, techniques, and procedures) table from the scraped text."):
                     ttptable = ttp(text, client)  # Assign the output of ttp to ttptable
+                    st.session_state['ttptable'] = ttptable 
                     st.write("### TTPs table")
                     st.write(ttptable)
-            #if submit_cb_ttps:  
-            #    with st.spinner("Extracting TTPs (tactics, techniques, and procedures) table from the scraped text."):  
-            #        if 'ttptable' in st.session_state:  
-            #            ttptable = st.session_state['ttptable']  
-            #        else:  
-            #            ttptable = ttp(text, client)  # Assign the output of ttp to ttptable  
-            #            st.session_state['ttptable'] = ttptable  
-            #        st.write("### TTPs table")  
-            #        st.write(ttptable)
         
-            # Extracting IOCs and displaying them as a table
+            #TTPs ordered by execution time
             if submit_cb_ttps_by_time:
                 with st.spinner("TTPs ordered by execution time"):
-                    attackpath = ttp_list(text, ttptable, client)
-                    st.write("### TTPs ordered by execution time")
+                    # Check if attackpath exists in session state 
+                    if st.session_state['attackpath']:
+                        attackpath = st.session_state['attackpath']  
+                    else:
+                        attackpath = ttp_list(text, ttptable, client)
+                        st.session_state['attackpath'] = attackpath  
+                    st.write("### TTPs ordered by execution time")  
                     st.write(attackpath)
 
             # Mermaid TTPs timeline
@@ -1082,7 +1080,7 @@ with tab3:
     form4 = st.form("Form to run pdf", clear_on_submit=False)
     #default_url4 = ""
     #url4 = form4.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
-   # Create columns for buttons and checkboxes
+    #Create columns for buttons and checkboxes
     cols4 = form4.columns(2)
 
     #with cols4[0]:
@@ -1092,7 +1090,7 @@ with tab3:
         submit_cb_summary4 = form4.checkbox("🗺️Add Summary and MindMap",value=True)
         #submit_cb_ioc4 = form4.checkbox("🧐I want to extract and add IOCs (if present)",value=True)
         #submit_cb_ttps4 = form4.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)
-        #submit_cb_ttps_by_time4 = form4.checkbox("🕰️TTPs ordered by execution time",value=True)
+        submit_cb_ttps_by_time4 = form4.checkbox("🕰️TTPs ordered by execution time",value=True)
         #submit_cb_ttps_timeline4 = form4.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)
     #user_input=""
         
@@ -1131,20 +1129,31 @@ with tab3:
                         html(ti_mermaid.mermaid_chart_png(mindmap_code), width=1500, height=1500)  
                     with st.expander("See OpenAI Generated Mermaid Code"):  
                         st.code(mindmap_code)  
-            
-            # Extracting IOCs and displaying them as a table
-            if submit_cb_ttps4:  
-                with st.spinner("Extracting TTPs (tactics, techniques, and procedures) table from the scraped text."):  
-                    if 'ttptable' in st.session_state:  
+        
+            # Extracting TTPs 
+            if submit_cb_ttps_by_time4:  
+                with st.spinner("TTPs ordered by execution time"):  
+                    # Check if ttptable exists in session state  
+                    if st.session_state['ttptable']:
                         ttptable = st.session_state['ttptable']  
                     else:  
                         ttptable = ttp(text, client)  # Assign the output of ttp to ttptable  
-                        st.session_state['ttptable'] = ttptable  
+                        st.session_state['ttptable'] = ttptable   
                     st.write("### TTPs table")  
-                    st.write(ttptable)
+                    st.write(ttptable)  
+  
+                    # Check if attackpath exists in session state  
+                    # Check if attackpath exists in session state 
+                    if st.session_state['attackpath']:
+                        attackpath = st.session_state['attackpath']  
+                    else:
+                        attackpath = ttp_list(text, ttptable, client)
+                        st.session_state['attackpath'] = attackpath  
+                    st.write("### TTPs ordered by execution time")  
+                    st.write(attackpath)
 
             #pdf_bytes = create_pdf_from_mermaid(remove_first_non_empty_line_if_mermaid(mindmap_code), summary,"ti-mindmap-gpt.streamlit.app.pdf","")
-            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code)
+            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code, attackpath)
 
             st.download_button(label="Save report to disk",
                         data=pdf_bytes,
