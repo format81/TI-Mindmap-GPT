@@ -82,3 +82,23 @@ def mermaid_chart_png(mindmap_code):
     <button onclick="downloadPNG()">Save Mindmap as PNG</button>
     """
     return html_code
+
+
+def mermaid_timeline_graph(mindmap_code_timeline):
+    """
+    Renders a Mermaid timeline graph from the given Mermaid code.
+
+    Args:
+        mindmap_code_timeline (str): The Mermaid code for the timeline graph.
+
+    Returns:
+        str: The HTML code for the Mermaid timeline graph.
+    """
+
+    html_code = f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <div class="mermaid">{mindmap_code_timeline}</div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({{startOnLoad:true}});</script>
+    """
+    return html_code
