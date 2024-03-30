@@ -5,7 +5,7 @@ from openai import AzureOpenAI
 import streamlit as st
 from streamlit.components.v1 import html
 import pandas as pd
-#import urllib.pars
+import urllib.parse
 
 from ti_mermaid import mermaid_timeline_graph, mermaid_chart_png
 from ti_mermaid_live import genPakoLink
