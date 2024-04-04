@@ -39,6 +39,7 @@ If you find TI MINDMAP useful, please consider starring the repository on GitHub
 1. [Introducing TI Mindmap GPT](https://medium.com/@antonio.formato/introducing-ti-mindmap-gpt-6f433f140488)
 2. [Enhancing Cyber Threat Intelligence with TI Mindmap GPT: Integration of Azure OpenAI and advanced features](https://medium.com/microsoftazure/enhancing-cyber-threat-intelligence-with-ti-mindmap-gpt-integration-of-azure-openai-and-advanced-94121ed66ac4)
 3. [What’s new in TI Mindmap | feb 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-feb-2024-14cf3b383833)
+4. [What’s new in TI Mindmap | mar 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-mar-2024-3712f38c6dd6)
 
 ### Version 0.1
 

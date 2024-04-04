@@ -6,13 +6,20 @@ import streamlit as st
 from streamlit.components.v1 import html
 import pandas as pd
 import urllib.parse
+import os
+import json
+from uuid import uuid4
 
 from ti_mermaid import mermaid_timeline_graph, mermaid_chart_png
 from ti_mermaid_live import genPakoLink
 from ti_ai import ai_check_content_relevance, ai_extract_iocs, ai_get_response, ai_process_text, ai_run_models_tweet, ai_summarise, ai_summarise_tweet, ai_run_models, ai_ttp, ai_ttp_graph_timeline, ai_ttp_list
 import ti_pdf
 import ti_mermaid
+import ti_navigator
 
+# Check if static directory exists, if not, create it  
+if not os.path.exists('./static'):  
+    os.makedirs('./static')
 
 def scrape_text(url):
     """
@@ -100,15 +107,9 @@ def add_mermaid_theme(mermaid_code, selected_theme):
     return f"%%{{ init: {{'theme': '{theme}'}}}}%%\n{mermaid_code}"
 
 
-
-
 #----------------------------------------------------------------#
-# ------------------ Streamlit UI Configuration ------------------ #
+# ------------------ Streamlit UI Configuration -----------------#
 #----------------------------------------------------------------#
-#----------------------------------------------------------------#
-#----------------------------------------------------------------#
-#----------------------------------------------------------------#
-
 
 service_selection = ""
 azure_api_key = ""
@@ -267,8 +268,8 @@ with col2:
         st.session_state['input_key'] += 1  # Increment input key to clear user input
         st.session_state['summary'] = ""  # Clear summary when new URL is scraped  
         st.session_state['mindmap_code'] = ""  # Clear mindmap_code when new URL is scraped
-        st.session_state['ttptable'] = ""
-        st.session_state['attackpath'] = ""
+        st.session_state['ttptable'] = "" # Clear ttptable
+        st.session_state['attackpath'] = "" # Clear attackpath
         
         # Check if the content is related to cybersecurity
         #relevance_check = check_content_relevance(text2, client, service_selection)
@@ -296,7 +297,8 @@ with tab1:
         submit_cb_ioc = form.checkbox("🧐I want to extract IOCs (if present)",value=True)  
         submit_cb_ttps = form.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)  
         submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)  
-        submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True)  
+        submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True) 
+        submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer",value=True) 
       
     with cols[0]:  
         submit_button = form.form_submit_button("Generate")  
@@ -404,6 +406,41 @@ with tab1:
                 html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
                 mermaid_link2 = genPakoLink(mermaid_timeline)
                 st.link_button("Open code in Mermaid.live", mermaid_link2)
+
+            #Mitre Navigator layer
+            if submit_cb_navigator:
+                mitre_layer = ti_navigator.attack_layer(text, client, service_selection, deployment_name)
+                # Check if mitre_layer is valid JSON
+                try:
+                    json.loads(mitre_layer)
+                except json.JSONDecodeError:
+                    st.error("The generated layer is not a valid JSON file.")
+                    if st.button("Click here to regenerate the layer"):
+                        mitre_layer = ti_navigator.attack_layer(text, client, service_selection, deployment_name)
+                        try:
+                            json.loads(mitre_layer)
+                        except json.JSONDecodeError:
+                            st.error("Failed to regenerate the layer. Please try again.")
+                            st.stop()  # Stop further execution
+                        else:
+                            st.success("Layer regenerated successfully.")
+                        
+                st.write("### MITRE ATT&CK Navigator layer json")
+                unique_id = str(uuid4())  # Create a unique ID  
+                file_name = f"./static/{unique_id}.json"  # Create a file name using the unique ID and specify directory
+
+                # Write the layer data to a file  
+                with open(file_name, 'w') as f:  
+                    f.write(mitre_layer) 
+
+                streamlit_base_url = "https://ti-mindmap-gpt.streamlit.app"
+                # Define the URL for the MITRE Navigator with your layer  
+                layer_url = f"{streamlit_base_url}/app/static/{unique_id}.json"
+
+                # Embed the Navigator in an iframe  
+                st.write("Here is the JSON layer file that you can import into the [MITRE ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/).")
+                st.json(mitre_layer, expanded=True)
+                st.markdown(f"📃 [![Mitre layer json file](./app/static/{unique_id}.json)]({layer_url})")
                 
     elif submit_button and not client:
         st.error("Please enter a valid OpenAI API key to generate the mindmap.")

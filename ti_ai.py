@@ -756,6 +756,3 @@ def ai_attack_layer(text, client, ttptable,prompt_table, prompt_response,service
         )
         return response.choices[0].message.content
 """
-
-
-

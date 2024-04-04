@@ -8,10 +8,8 @@ def pako_deflate(data):
     compressed_data += compress.flush()
     return compressed_data
 
-
 def js_btoa(data):
     return base64.b64encode(data)
-
 
 def genPakoLink(graphMarkdown: str):
     jGraph = {"code": graphMarkdown, "mermaid": {"theme": "default"}}
