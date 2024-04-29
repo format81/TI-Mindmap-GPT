@@ -1,0 +1,136 @@
+{
+  "name": "Operation Blacksmith: Lazarus Target TTPs",
+  "versions": {
+    "attack": "14",
+    "navigator": "4.9.1",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "TTPs identified in Lazarus Group's Operation Blacksmith using novel Telegram-based malware, NineRAT",
+  "filters": {
+    "platforms": ["windows"]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": false,
+    "showName": true,
+    "showAggregateScores": false,
+    "countUnscored": false,
+    "expandedSubtechniques": "none"
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1190",
+      "tactic": "initial-access",
+      "color": "",
+      "comment": "Used CVE-2021-44228 to exploit publicly exposed servers for initial access.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059",
+      "tactic": "execution",
+      "color": "",
+      "comment": "Used commands and scripts (like PowerShell) to execute different operations",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1543",
+      "tactic": "persistence",
+      "color": "",
+      "comment": "Used NineRAT to set up persistence by creating services using BAT scripts.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1140",
+      "tactic": "defense-evasion",
+      "color": "",
+      "comment": "NineRAT has a dropper binary containing two other components, which are written to disk and the dropper deletes itself to avoid detection.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1102",
+      "tactic": "command-and-control",
+      "color": "",
+      "comment": "Used Telegram bots and channels for C2 communications.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1082",
+      "tactic": "discovery",
+      "color": "",
+      "comment": "Used commands like 'whoami', 'ver', 'getmac' for system information discovery.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1005",
+      "tactic": "collection",
+      "color": "",
+      "comment": "NineRAT is used to collect data from the local system.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1136",
+      "tactic": "persistence",
+      "color": "",
+      "comment": "Created additional user account on the system, granting it administrative privileges.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    }, 
+    {
+      "techniqueID": "T1518",
+      "tactic": "discovery",
+      "color": "",
+      "comment": "WMIC used to discover system information.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003.005",
+      "tactic": "credential-access",
+      "color": "",
+      "comment": "Used ProcDump and MimiKatz for credential dumping.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": ["#00ff00", "#ffff00", "#ff0000"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [],
+  "metadata": [],
+  "links": [],
+  "showTacticRowBackground": false,
+  "tacticRowBackground": "#dddddd"
+}

@@ -14,3 +14,4 @@ pillow
 streamlit-pdf-viewer
 ipython
 reportlab
+mistralai

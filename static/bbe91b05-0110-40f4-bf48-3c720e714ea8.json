@@ -1,0 +1,110 @@
+{
+"name": "Lazarus Group Operation Blacksmith",
+"versions": {
+"attack": "14",
+"navigator": "4.9.1",
+"layer": "4.5"
+},
+"domain": "enterprise-attack",
+"description": "This layer represents the tactics, techniques, and procedures (TTPs) used by the Lazarus Group in their Operation Blacksmith campaign.",
+"filters": {
+"platforms": ["windows"]
+},
+"sorting": 0,
+"layout": {
+"layout": "side",
+"aggregateFunction": "average",
+"showID": false,
+"showName": true,
+"showAggregateScores": false,
+"countUnscored": false,
+"expandedSubtechniques": "none"
+},
+"hideDisabled": false,
+"techniques": [
+{
+"techniqueID": "T1190",
+"tactic": "Initial Access",
+"color": "",
+"comment": "Exploitation of CVE-2021-44228 (Log4Shell) for initial access to publicly facing VMWare Horizon servers.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+},
+{
+"techniqueID": "T1087",
+"tactic": "Execution",
+"color": "",
+"comment": "Execution of various commands and scripts for reconnaissance and lateral movement.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+},
+{
+"techniqueID": "T1078",
+"tactic": "Valid Accounts",
+"color": "",
+"comment": "Creation of a new user account with administrative privileges for hands-on-keyboard activity.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+},
+{
+"techniqueID": "T1543",
+"tactic": "Persistence",
+"color": "",
+"comment": "Use of HazyLoad, a custom-made proxy tool, to maintain persistent access to infected systems.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+},
+{
+"techniqueID": "T1003",
+"tactic": "Credential Access",
+"color": "",
+"comment": "Use of credential dumping utilities such as ProcDump and MimiKatz to harvest credentials.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+},
+{
+"techniqueID": "T1086",
+"tactic": "Command and Control",
+"color": "",
+"comment": "Use of Telegram-based C2 channel for accepting commands, communicating outputs, and file transfer in NineRAT.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+},
+{
+"techniqueID": "T1027",
+"tactic": "Discovery",
+"color": "",
+"comment": "Execution of various commands for system information discovery and software discovery.",
+"enabled": true,
+"metadata": [],
+"links": [],
+"showSubtechniques": false
+}
+],
+"gradient": {
+"colors": [
+"#ff6666",
+"#ffe766",
+"#8ec843"
+],
+"minValue": 0,
+"maxValue": 100
+},
+"legendItems": [],
+"metadata": [],
+"links": [],
+"showTacticRowBackground": false,
+"tacticRowBackground": "#dddddd"
+}

@@ -3,20 +3,24 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.callbacks import get_openai_callback
 from langchain_community.vectorstores import FAISS
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAI as langchainOAI, OpenAIEmbeddings
+from langchain_mistralai.chat_models import ChatMistralAI as langchainMistralAI
+from langchain_mistralai import MistralAIEmbeddings
+#from langchain_mistralai import DummyTokenizer
 import pandas as pd
-
+from mistralai.models.chat_completion import ChatMessage
+from mistralai.client import MistralClient
 
 OPENAI_MODEL = "gpt-4-1106-preview"
 
 # Function to summarize the blog to create a short tweet, it work for both OpenAI and Azure OpenAI
-def ai_summarise_tweet(input_text, client, ai_service_provider, selected_language, deployment_name):
+def ai_summarise_tweet(input_text, client, ai_service_provider, selected_language, deployment_name=None):
     """
     Summarizes a long text using a language model.
 
     Args:
         input_text (str): The text to summarize.
         client (OpenAI): The OpenAI API client.
-        ai_service_provider (str): The name of the AI service provider (OpenAI or Azure OpenAI).
+        ai_service_provider (str): The name of the AI service provider (OpenAI, Azure OpenAI or MistraAI).
         selected_language (List[str]): The list of languages to use for summarization.
         deployment_name (str): The name of the deployment to use for Azure OpenAI.
 
@@ -37,34 +41,45 @@ def ai_summarise_tweet(input_text, client, ai_service_provider, selected_languag
     system_message = f"You are responsible for creating a short tweet in {language} for a Threat Analyst. Write a tweet summary that contains maximum 250 symbols and will summarize the main topic and the key findings relevant for a threat analyst. You can add an emoji. Add tag #timindmap"
 
     try:
-        # Determine the model based on the service provider
-        model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            # Determine the model based on the service provider
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
         
-        # Make the API call
-        response = client.chat.completions.create(
-            model=model,
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": input_text},
+                ],
+            )
+        
+            return response.choices[0].message.content
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+            model = "mistral-large-latest",
             messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": input_text},
-            ],
-        )
-        
-        return response.choices[0].message.content
+                ChatMessage(role="system", content=system_message),
+                ChatMessage(role="user", content=input_text),
+                ],
+            )
+            return chat_response.choices[0].message.content  
+
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while generating the tweet summary: {e}"
 
 
 # Function to summarize the blog, it work for both OpenAI and Azure OpenAI
-def ai_summarise(input_text, client, ai_service_provider, selected_language, deployment_name):
+def ai_summarise(input_text, client, ai_service_provider, selected_language, deployment_name=None):
     """Summarizes a long text using a language model.
 
     Args:
         input_text (str): The text to summarize.
         client (OpenAI): The OpenAI API client.
-        ai_service_provider (str): The name of the AI service provider (OpenAI or Azure OpenAI).
+        ai_service_provider (str): The name of the AI service provider (OpenAI, Azure OpenAI, or MistralAI).
         selected_language (List[str]): The list of languages to use for summarization.
-        deployment_name (str): The name of the deployment to use for Azure OpenAI.
+        deployment_name (str): The name of the deployment to use for Azure OpenAI.  This parameter is not used for OpenAI or MistralAI.
 
     Returns:
         str: The summarized text.
@@ -84,34 +99,45 @@ def ai_summarise(input_text, client, ai_service_provider, selected_language, dep
     system_message = f"You are responsible for summarizing in {language} a threat report for a Threat Analyst. Write a paragraph that will summarize the main topic, the key findings, and all the detailed information relevant for a threat analyst such as detection opportunity iocs and TTPs. Use the title and add an emoji. Do not generate a bullet points list but rather multiple paragraphs."
     
     try:
-        # Determine the model based on the service provider
-        model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            # Determine the model based on the service provider
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
         
-        # Make the API call
-        response = client.chat.completions.create(
-            model=model,
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": input_text},
+                ],
+            )
+        
+            return response.choices[0].message.content
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+            model = "mistral-large-latest",
             messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": input_text},
-            ],
-        )
-        
-        return response.choices[0].message.content
+                ChatMessage(role="system", content=system_message),
+                ChatMessage(role="user", content=input_text),
+                ],
+            )
+            return chat_response.choices[0].message.content
+
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while generating the summary: {e}"
 
 
 # Function to check if content is related to cybersecurity
-def ai_check_content_relevance(input_text, client, ai_service_provider, deployment_name):
+def ai_check_content_relevance(input_text, client, ai_service_provider, deployment_name=None):
     """
     Determines if the input text is related to cybersecurity.
 
     Args:
         input_text (str): The input text to evaluate.
         client (OpenAI): The OpenAI API client.
-        ai_service_provider (str): The name of the AI service provider (OpenAI or Azure OpenAI).
-        deployment_name (str): The name of the deployment to use for Azure OpenAI.
+        ai_service_provider (str): The name of the AI service provider (OpenAI, Azure OpenAI or MistralAI).
+        deployment_name (str): The name of the deployment to use for Azure OpenAI.  This parameter is not used for OpenAI or MistralAI.
 
     Returns:
         str: A message indicating whether the input text is related to cybersecurity or an error message.
@@ -127,22 +153,33 @@ def ai_check_content_relevance(input_text, client, ai_service_provider, deployme
     # Prepare the prompt
     prompt = "Determine if the following text is related to cybersecurity: \n" + input_text
     try:
-        # Determine the model based on the service provider
-        model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            # Determine the model based on the service provider
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
         
-        # Make the API call
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": prompt}]
-        )
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": prompt}]
+            )
         
-        return response.choices[0].message.content
+            return response.choices[0].message.content
+        
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+            model = "mistral-large-latest",
+            messages=[
+                ChatMessage(role="system", content=prompt),
+                ],
+            )
+            return chat_response.choices[0].message.content
+        
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while checking content relevance: {e}"
 
 
-def ai_run_models(input_text, client, selected_language, deployment_name, service_selection):
+def ai_run_models(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
     Runs the AI models to generate a summary, mindmap, and tweet.
 
@@ -161,7 +198,7 @@ def ai_run_models(input_text, client, selected_language, deployment_name, servic
 
     """
      # Validate input parameters
-    if not input_text or not client or not service_selection:
+    if not input_text or not client or not ai_service_provider:
         return "Invalid input parameters."
     
     # Combine the selected languages into a string, or default to "English" if none selected
@@ -195,26 +232,39 @@ def ai_run_models(input_text, client, selected_language, deployment_name, servic
     )
     try:
         # Determine the model based on the service provider
-        model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
         
-        # Make the API call
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-                {"role": "assistant", "content": assistant_prompt},
-                {"role": "user", "content": input_text},
-            ],
-        )
+            # Make the API call for OpenAI or Azure OpenAI
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                    {"role": "assistant", "content": assistant_prompt},
+                    {"role": "user", "content": input_text},
+                ],
+            )
         
-        return response.choices[0].message.content
+            return response.choices[0].message.content
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="system", content=system_prompt),
+                    ChatMessage(role="user", content=user_prompt),
+                    ChatMessage(role="assistant", content=assistant_prompt),
+                    ChatMessage(role="user", content=input_text),
+                ],
+            )
+
+            return chat_response.choices[0].message.content
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while generating the mindmap: {e}"
 
 
-def ai_run_models_tweet(input_text, client, selected_language, deployment_name,service_selection):
+def ai_run_models_tweet(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
     Creates a mindmap in the specified languages using the specified OpenAI API client.
 
@@ -241,45 +291,92 @@ def ai_run_models_tweet(input_text, client, selected_language, deployment_name,s
 
 
     # Determine the model based on the service provider
-    model = "gpt-4-1106-preview" if service_selection == "OpenAI" else deployment_name
-
-    # Prepare the messages for the API call
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": system_prompt_user},
-        {"role": "assistant", "content": system_prompt_asistant},
-        {"role": "user", "content": input_text},
-    ]
-
+    #model = "gpt-4-1106-preview" if service_selection == "OpenAI" else deployment_name
     try:
-        # Make the API call
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-        )
-        return response.choices[0].message.content
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
+
+            # Prepare the messages for the API call
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": system_prompt_user},
+                {"role": "assistant", "content": system_prompt_asistant},
+                {"role": "user", "content": input_text},
+            ]
+
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+            )
+            return response.choices[0].message.content
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="system", content=system_prompt),
+                    ChatMessage(role="user", content=system_prompt_user),
+                    ChatMessage(role="assistant", content=system_prompt_asistant),
+                    ChatMessage(role="user", content=input_text),
+                ],
+            )
+            return chat_response.choices[0].message.content
+    
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while generating the mindmap: {e}"
+    
+#functions to extract IOCs
+def create_dataframe_from_response(response):  
+    """  
+    Create a pandas DataFrame from the response of the AI API client.  
+    This function is used after making a request to either OpenAI's API or MistralAI to extract Indicators of Compromise (IOCs) from unstructured text. It processes the response content and returns a DataFrame with the extracted IOCs.  
+  
+    Args:  
+        response (dict or ChatCompletionResponse): The response from the AI API client containing the extracted IOCs.  
+  
+    Returns:  
+        pd.DataFrame: A pandas DataFrame containing the extracted IOCs.  
+  
+    Raises:  
+        ValueError: If the response is empty or does not contain the expected data.  
+    """ 
+    try:  
+        if isinstance(response, dict) and "choices" in response:
+            # For OpenAI or Azure OpenAI
+            response_content = response['choices'][0]['message']['content']
+        elif hasattr(response, "choices") and response.choices:
+            # For MistralAI
+            response_content = response.choices[0].message.content
+        else:
+            raise ValueError("Response format not recognized.")
+
+        data = [line.split(",") for line in response_content.strip().split("\n")]  
+        max_columns = max(len(row) for row in data)  
+        standardized_data = [row + [''] * (max_columns - len(row)) for row in data]  
+        df = pd.DataFrame(standardized_data[1:], columns=standardized_data[0])  
+        return df  
+    except Exception as e:  
+        raise ValueError(f"Failed to extract and parse IOCs: {e}")
 
 
+def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=None):
+    """  
+    Extract Indicators of Compromise (IOCs) from unstructured text using OpenAI's API or MistralAI.  
+  
+    Args:  
+        input_text (str): The unstructured text to extract IOCs from.  
+        client (object): The AI API client (OpenAI or MistralAI) to use for making requests.  
+        ai_service_provider (str): The name of the AI service to use for completions ("OpenAI", "Azure OpenAI" or "MistralAI").  
+        deployment_name (str): The name of the Azure OpenAI deployment to use for completions. This is only needed if ai_service_provider is "Azure OpenAI".  
+  
+    Returns:  
+        pd.DataFrame: A pandas DataFrame containing the extracted IOCs.  
+  
+    Raises:  
+        ValueError: If the input text is empty or the AI API client is not provided.  
+    """  
 
-def ai_extract_iocs(input_text, client, service_selection, deployment_name):
-    """
-    Extract Indicators of Compromise (IOCs) from unstructured text using OpenAI's API.
-
-    Args:
-        input_text (str): The unstructured text to extract IOCs from.
-        client (OpenAIAPI): The OpenAI API client to use for making requests.
-        service_selection (str): The name of the OpenAI service to use for completions.
-        deployment_name (str): The name of the Azure OpenAI deployment to use for completions.
-
-    Returns:
-        pd.DataFrame: A pandas DataFrame containing the extracted IOCs.
-
-    Raises:
-        ValueError: If the input text is empty or the OpenAI API client is not provided.
-    """
 
     # Prepare the system message
     prompt = (
@@ -290,29 +387,31 @@ def ai_extract_iocs(input_text, client, service_selection, deployment_name):
         "Examples: tech[.]micrsofts[.]com will be tech.micrsofts.com and 27.102.113.93"
     )
 
-    # Determine the model based on the service provider
-    model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
-
-    # Make the API call
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "system", "content": prompt + "\n\n" + input_text}],
-    )
-
-    # Extract and return the response content
     try:
-        response_content = response.choices[0].message.content
-        # Parse the response content into a DataFrame
-        data = [line.split(",") for line in response_content.strip().split("\n")]
-        max_columns = max(len(row) for row in data)
-        standardized_data = [row + [''] * (max_columns - len(row)) for row in data]
-        df = pd.DataFrame(standardized_data[1:], columns=standardized_data[0])
-        return df
-    except Exception as e:
-        return f"Failed to extract and parse IOCs: {e}"
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            # Determine the model based on the service provider
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
 
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": prompt + "\n\n" + input_text}],
+            )
 
-def ai_ttp(text, client,service_selection, deployment_name, input_text):
+            return create_dataframe_from_response(response)
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+            model = "mistral-large-latest",
+            messages=[
+                ChatMessage(role="system", content=prompt + "\n\n" + input_text),
+                ],
+            )
+            return create_dataframe_from_response(chat_response)  
+    except Exception as e:  
+        return f"Failed to extract and parse IOCs: {e}"  
+
+#Extract TTPs table
+def ai_ttp(text, client,service_selection, deployment_name=None):
     """
     This function is used to extract TTPs from a given text using the OpenAI API.
 
@@ -326,38 +425,50 @@ def ai_ttp(text, client,service_selection, deployment_name, input_text):
     Returns:
         str: The response from the API call.
     """
-  # Define the SYSTEM prompt with guidelines for creating the mindmap
-    system_prompt_ttp = (
-            "You are an AI assistant expert in cybersecurity, threat intelligence, and Mitre attack, assisting Infosec professionals in understanding cyber attacks."
-    )
-        # Define the USER prompt
+    # Define the USER prompt
+    #user_prompt_ttp = (
+    #        "With reference to ATT&CK Matrix for Enterprise extract TTPs (tactics and techniques) from text at the end of following prompt. \n"
+    #        "For each techniques try to provide techniqueID, tactic, comment if you can get relevant content from text, producing a table with following columns: technique, technique ID, tactic, comment. \n"
+    #        f"Text to work with: {text}"
+    #    )
     user_prompt_ttp = (
-            f"With reference to ATT&CK Matrix for Enterprise extract TTPs (tactics and techniques) from text at the end of following prompt. \n"
-            "For each techniques try to provide techniqueID, tactic, comment if you can get relevant content from text, producing a table with following columns: technique, technique ID, tactic, comment. \n"
-            "Text to work with: {text}"
-        )
-  # Determine the model based on the service provider
-    model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
-
-    # Prepare the messages for the API call
-    messages = [
-        {"role": "system", "content": system_prompt_ttp},
-        {"role": "user", "content": user_prompt_ttp},
-        {"role": "user", "content": input_text},
-    ]
-
-    # Make the API call
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
+        "Using the ATT&CK Matrix for Enterprise, extract Tactics, Techniques, and Procedures (TTPs) from the provided text. \n"
+        "For each identified technique, include its associated ID, tactic, and any relevant comments derived from the text. Provide output just for most imporant TTPs. \n"
+        f"Organize this information into a table with the following columns: technique, technique ID, tactic, and comment. The text to analyze is: {text}"
     )
+    try:
+        if service_selection == "OpenAI" or service_selection == "Azure OpenAI":       
+            #Determine the model based on the service provider
+            model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
 
-    # Return the response content
-    return response.choices[0].message.content
+            # Prepare the messages for the API call
+            messages = [
+                {"role": "user", "content": user_prompt_ttp},
+            ]
 
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+            )
 
+            # Return the response content
+            return response.choices[0].message.content
+    
+        elif service_selection == "MistralAI":
+            # Make the API call
+            response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="user", content=user_prompt_ttp),
+                    ],
+                )
+                # Return the response content
+            return response.choices[0].message.content
+    except Exception as e:
+        return f"Failed to extract TTPs: {e}"
 
-def ai_ttp_list(text, ttptable, client, service_selection, deployment_name):
+def ai_ttp_list(text, ttptable, client, service_selection, deployment_name=None):
     """
     This function takes as input a text, a table of TTPs, a client, a service selection, and a deployment name.
     The function makes an API call to the specified client using the specified service selection and deployment name,
@@ -367,8 +478,8 @@ def ai_ttp_list(text, ttptable, client, service_selection, deployment_name):
         text (str): The text to process.
         ttptable (str): The table of TTPs.
         client: The client to use for the API call.
-        service_selection (str): The service selection to use for the API call.
-        deployment_name (str): The deployment name to use for the API call.
+        service_selection (str): The service selection to use for the API call. It can be 'OpenAI', 'Azure OpenAI', or 'MistralAI'.
+        deployment_name (str): The deployment name to use for the API call. This is only used when service_selection is 'Azure OpenAI'.
 
     Returns:
         str: The response content from the API call.
@@ -382,28 +493,40 @@ def ai_ttp_list(text, ttptable, client, service_selection, deployment_name):
         f"Based on {text} and {ttptable} provide a list of TTPs order by execution time, Each line must include only Tactic and Subtactic, IDs between brackets after subtactic. \n"
         "The Enterprise tactics names as defined by the MITRE ATT&CK framework are: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact"
     )
-    # Determine the model based on the service provider
-    model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
+    try:
+        if service_selection == "OpenAI" or service_selection == "Azure OpenAI":
+            #Determine the model based on the service provider
+            model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
 
-    # Prepare the messages for the API call
-    messages = [
-        {"role": "system", "content": system_prompt_ttp_list},
-        {"role": "user", "content": user_prompt_ttp_list},
-    ]
+            # Prepare the messages for the API call
+            messages = [
+                {"role": "system", "content": system_prompt_ttp_list},
+                {"role": "user", "content": user_prompt_ttp_list},
+            ]
 
-    # Make the API call
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-    )
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+            )
 
-    # Return the response content
-    return response.choices[0].message.content
+            # Return the response content
+            return response.choices[0].message.content
+        elif service_selection == "MistralAI":
+            # Make the API call
+            response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="system", content=system_prompt_ttp_list),
+                    ChatMessage(role="user", content=user_prompt_ttp_list),
+                ],
+            )
+            # Return the response content
+            return response.choices[0].message.content
+    except Exception as e:
+        return f"Failed to extract TTPs: {e}"
 
-
-
-
-def ai_ttp_graph_timeline(text, client, service_selection, deployment_name, input_text):
+def ai_ttp_graph_timeline(text, client, service_selection, deployment_name=None):
   """
     Generate a Mermaid.js timeline graph that illustrates the stages of a cyber attack based on the provided timeline text.
 
@@ -420,7 +543,7 @@ def ai_ttp_graph_timeline(text, client, service_selection, deployment_name, inpu
   # Define the USER prompt
   user_prompt_ttp_graph_timeline = (
           f"Write a Mermaid.js timeline graph that illustrates the stages of a cyber attack whose TTPs timeline is as follows: {text} .\n"
-          "As an example condider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. \n"
+          f"As an example condider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. \n"
           "Use the Enterprise tactics names as defined by the MITRE ATT&CK framework are: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact"
           "Use the following guidalines to generate code: \n"
           "1. Use keyword timeline to start the graph definition, timeline must be first word in the output, don't use anything else. \n"
@@ -436,40 +559,50 @@ def ai_ttp_graph_timeline(text, client, service_selection, deployment_name, inpu
           "11. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n"
           "12. Don't write ``` as the first and last line."
     )
-  if service_selection == "OpenAI":
-        # OpenAI API call
-        response = client.chat.completions.create(
-            model="gpt-4-1106-preview",
-            messages=[
+
+  try:
+      if service_selection == "OpenAI" or service_selection == "Azure OpenAI":
+            #Determine the model based on the service provider
+            model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
+
+            # Prepare the messages for the API call
+            messages = [
                 {"role": "user", "content": user_prompt_ttp_graph_timeline},
-                {"role": "user", "content": input_text},
-            ],
-        )
-        return response.choices[0].message.content
-  elif service_selection == "Azure OpenAI":
-        # Azure OpenAI API call
-        response = client.chat.completions.create(
-            model = deployment_name,
-            messages=[
-                {"role": "user", "content": user_prompt_ttp_graph_timeline},
-                {"role": "user", "content": input_text},
-            ],
-        )
-        return response.choices[0].message.content
+            ]
 
+            # Make the API call
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+            )
+            return response.choices[0].message.content
+      elif service_selection == "MistralAI":     
+          # Make the API call
+          response = client.chat(
+              model="mistral-large-latest",
+              messages=[
+                  ChatMessage(role="use", content=user_prompt_ttp_graph_timeline),
+                  ],
+            )
+          # Return the response content
+          return response.choices[0].message.content
+  except Exception as e:
+      return f"Failed to extract TTPs: {e}"
 
-
-def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embedding_deployment_name, openai_api_key):
+def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embedding_deployment_name, openai_api_key, mistral_api_key):
     """
     Processes the input text using various NLP techniques and returns a FAISS knowledge base.
 
     Args:
         text (str): The input text to be processed.
-        service_selection (str): The AI service to be used for processing the text. Can be either "OpenAI" or "Azure OpenAI".
+        service_selection (str): The AI service to be used for processing the text. Can be either "OpenAI", "Azure OpenAI", or "MistralAI".
         azure_api_key (str): The API key for the Azure Cognitive Services endpoint. Required if using "Azure OpenAI".
         azure_endpoint (str): The endpoint URL for the Azure Cognitive Services endpoint. Required if using "Azure OpenAI".
         embedding_deployment_name (str): The name of the Azure Machine Learning deployment that contains the text embedding model. Required if using "Azure OpenAI".
         openai_api_key (str): The API key for the OpenAI API. Required if using "OpenAI".
+        mistral_api_key (str): The API key for the MistralAI API. Required if using "MistralAI".
+        mistral_model (str): The model to use for MistralAI.
+        mistral_embeddings_model (str): The embeddings model to use for MistralAI.
 
     Returns:
         Optional[FAISS]: The FAISS knowledge base containing the processed text embeddings. Returns None if the processing fails.
@@ -491,6 +624,8 @@ def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embe
                                         api_key=azure_api_key,
                                         chunk_size=1,
                                         api_version="2024-02-15-preview")
+        elif service_selection == "MistralAI":
+            embeddings = MistralAIEmbeddings(mistral_api_key=mistral_api_key, model = "mistral-embed")
         else:
             raise ValueError("Invalid AI service selection")
 
@@ -504,9 +639,7 @@ def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embe
         knowledge_base = FAISS.from_texts(chunks, embeddings)
     return knowledge_base
 
-
-
-def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key):
+def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key, mistral_api_key, mistral_model):
     """
     Get a response from a knowledge base using a query.
 
@@ -518,6 +651,8 @@ def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azu
         azure_endpoint (str): The Azure endpoint URL for the Azure OpenAI service.
         deployment_name (str): The name of the Azure OpenAI deployment.
         openai_api_key (str): The OpenAI API key for the OpenAI service.
+        mistral_api_key (str): The API key for the MistralAI API. Required if using "MistralAI".
+        mistral_model (str): The model to use for MistralAI.
 
     Returns:
         str: The response from the knowledge base.
@@ -533,6 +668,8 @@ def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azu
                               api_version="2023-07-01-preview",
                               azure_endpoint=azure_endpoint
                      )
+    elif service_selection == "MistralAI":
+        llm = langchainMistralAI(api_key=mistral_api_key, mistral_model=mistral_model)
     else:
         raise ValueError("Invalid AI service selection")
 
@@ -540,7 +677,6 @@ def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azu
     with get_openai_callback() as cost:
         response = chain.invoke(input={"question": query, "input_documents": docs})
     return response["output_text"]
-
 
 
 prompt_table = """
