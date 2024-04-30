@@ -3,9 +3,9 @@
 Welcome to TI MINDMAP GPT, an AI-powered tool designed to help producing Threat Intelligence Mindmap.
 
 **Introducing TI Mindmap** 
-Navigating through lengthy blog posts, threat intelligence articles, or write-ups can be daunting, especially for cyber threat intelligence teams aiming to extract key insights efficiently. Enter TI Mindmap, a tool accessible through the Streamlit app platform. With just a URL as input, this service harnesses the power of OpenAI to transform cumbersome content into concise, actionable summaries. But it doesn’t stop there. Utilizing sophisticated algorithms, TI Mindmap goes beyond mere text reduction, providing users with insightful encapsulations of crucial points and themes.
-TI Mindmap is a tool developed using Large Language Models (LLMs), OpenAI GPT4. It's designed to assist cyber threat intelligence teams in quickly synthesizing and visualizing key information from various Threat Intelligence sources. 
-The app operates on a 'Bring Your Own (OpenAI) Key' model, allowing users to leverage their own OpenAI keys for personalized and efficient information processing. 
+Navigating through lengthy blog posts, threat intelligence articles, or write-ups can be daunting, especially for cyber threat intelligence teams aiming to extract key insights efficiently. Enter TI Mindmap, a tool accessible through the Streamlit app platform. With just a URL as input, this service harnesses the power of OpenAI, Azure OpenAI and MistraAI to transform cumbersome content into concise, actionable summaries. But it doesn’t stop there. Utilizing sophisticated algorithms, TI Mindmap goes beyond mere text reduction, providing users with insightful encapsulations of crucial points and themes.
+TI Mindmap is a tool developed using Large Language Models (LLMs). It's designed to assist cyber threat intelligence teams in quickly synthesizing and visualizing key information from various Threat Intelligence sources. 
+The app operates on a 'Bring Your Own (LLM) Key' model, allowing users to leverage their own Large Language Models keys for personalized and efficient information processing. 
 This tool aims to streamline the data analysis process, enabling teams to focus more on strategic decision-making and less on the cumbersome task of data mining.
 
 App: [APP](https://ti-mindmap-gpt.streamlit.app/)
@@ -32,6 +32,7 @@ If you find TI MINDMAP useful, please consider starring the repository on GitHub
 - AI Chat on your TI Article
 - Mermaid live editor integration
 - PDF Report: Your Intelligence, Concisely Captured
+- LLM supported: OpenAI, Azure OpenAI, MistralAI
 
 ## Know issues
 

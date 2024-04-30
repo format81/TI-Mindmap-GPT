@@ -1,4 +1,4 @@
-
+import re
 
 def mermaid_chart(mindmap_code):
     html_code = f"""
@@ -102,3 +102,12 @@ def mermaid_timeline_graph(mindmap_code_timeline):
     <script>mermaid.initialize({{startOnLoad:true}});</script>
     """
     return html_code
+
+#Function to remove nested parentheses if present in LLM generated mermaid code
+def remove_nested_parentheses(mindmap_code):
+    # Find all occurrences of nested parentheses
+    matches = re.findall(r'\(([^()]*\([^()]*\)[^()]*)\)', mindmap_code)
+    for match in matches:
+        # Replace the nested parentheses with a single hyphen
+        mindmap_code = mindmap_code.replace(f'({match})', match.replace('(', '').replace(')', '-'))
+    return mindmap_code

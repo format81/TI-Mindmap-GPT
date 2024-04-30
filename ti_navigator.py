@@ -1,6 +1,9 @@
 import os
 import json
 from uuid import uuid4
+from mistralai.models.chat_completion import ChatMessage
+
+OPENAI_MODEL = "gpt-4-1106-preview"
 
 prompt_table2 = """
 | Technique                                | Technique ID | Tactic           | Comment                                                                                                      |
@@ -124,11 +127,27 @@ prompt_response2 = """
 """
 
 #Function to provide ATT&CK Matrix for Enterprise layer json file
-def attack_layer(input_text, client, service_selection, deployment_name):
+def attack_layer(input_text, ttptable, client, service_selection, deployment_name=None):
+  """
+Creates an ATT&CK Matrix for Enterprise layer in JSON format based on the provided input text and TTP table.
+
+Args:  
+    input_text (str): The input text to be used for creating the ATT&CK Matrix.  
+    ttptable (str): The TTP table that will be used as input for creating the ATT&CK Matrix.  
+    client (object): An instance of the client to be used for making the API calls. Can be either an OpenAI client, Azure OpenAI client, or MistralAI client.  
+    service_selection (str): The AI service to be used for processing the text. Can be either "OpenAI", "Azure OpenAI", or "MistralAI".  
+    deployment_name (str, optional): The name of the Azure Machine Learning deployment that contains the text embedding model. Required if using "Azure OpenAI".  
+
+Returns:  
+    str: The JSON content of the ATT&CK Matrix for Enterprise layer. Returns an error message if the processing fails.  
+
+Raises:  
+    Exception: If there is an error in the API call or in the creation of the ATT&CK Matrix.
+    """
   # Define the SYSTEM prompt
   system_prompt_attack_layer = (
-      f"You are tasked with creating an ATT&CK Matrix for Enterprise layer json file with attack version 14, navigator 4.9.1, layer version 4.5 to load a layer in MITRE ATT&CK Navigator. \n" 
-      "Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain field use enterprise-attack."
+      "You are tasked with creating an ATT&CK Matrix for Enterprise layer json file with attack version 14, navigator 4.9.1, layer version 4.5 to load a layer in MITRE ATT&CK Navigator. \n" 
+      f"Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain field use enterprise-attack."
   )
   # Define the USER prompt
   user_prompt_attack_layer = (
@@ -138,27 +157,38 @@ def attack_layer(input_text, client, service_selection, deployment_name):
   assistant_prompt_attack_layer = (
       f"{prompt_response2}"   
   )
-  if service_selection == "OpenAI":
-        # OpenAI API call
-        response = client.chat.completions.create(
-            model="gpt-4-1106-preview",
-            messages=[
-                {"role": "system", "content": system_prompt_attack_layer},
-                {"role": "user", "content": user_prompt_attack_layer},
-                {"role": "assistant", "content": assistant_prompt_attack_layer},
-		        {"role": "user", "content": input_text},
-            ],
-        )
-        return response.choices[0].message.content
-  elif service_selection == "Azure OpenAI":
-        # Azure OpenAI API call
-        response = client.chat.completions.create(
-            model = deployment_name,
-            messages=[
-                {"role": "system", "content": system_prompt_attack_layer},
-                {"role": "user", "content": user_prompt_attack_layer},
-                {"role": "assistant", "content": assistant_prompt_attack_layer},
-		        {"role": "user", "content": input_text},
-            ],
-        )
-        return response.choices[0].message.content
+  try:
+      if service_selection == "OpenAI" or service_selection == "Azure OpenAI":
+          # Determine the model based on the service provider
+          model = OPENAI_MODEL if service_selection == "OpenAI" else deployment_name
+
+          # Prepare the messages for the API call
+          messages=[
+              {"role": "system", "content": system_prompt_attack_layer},
+              {"role": "user", "content": user_prompt_attack_layer},
+              {"role": "assistant", "content": assistant_prompt_attack_layer},
+		          {"role": "user", "content": input_text},
+              ]
+          # Make the API call
+          response = client.chat.completions.create(
+              model=model,
+              messages=messages,
+              )
+
+          # Return the response content
+          return response.choices[0].message.content
+      elif service_selection == "MistralAI":
+            # Make the API call
+            response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="system", content=system_prompt_attack_layer),
+                    ChatMessage(role="user", content=user_prompt_attack_layer),
+                    ChatMessage(role="assistant", content=assistant_prompt_attack_layer),
+                    ChatMessage(role="user", content=input_text),
+                ],
+            )
+            # Return the response content
+            return response.choices[0].message.content
+  except Exception as e:
+      return f"Failed to extract TTPs: {e}"
