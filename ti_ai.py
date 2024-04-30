@@ -179,7 +179,7 @@ def ai_check_content_relevance(input_text, client, ai_service_provider, deployme
 
 def ai_run_models(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
-    Runs the AI models to generate a summary, mindmap, and tweet.
+    Runs the AI models to generate a mindmap.
 
     Args:
         input_text (str): The input text to process.
@@ -204,7 +204,7 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
     # Define the SYSTEM prompt with guidelines for creating the mindmap
     system_prompt = (
         f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. "
-        "This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
+        f"This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
         "1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code. \n"
         "2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes. \n"
         "3. Incorporate icons where suitable to enhance readability and comprehension. \n"
