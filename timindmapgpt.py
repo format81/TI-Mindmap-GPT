@@ -523,7 +523,7 @@ with tab1:
             st.session_state['chat_history'].append({'sender': 'user', 'message': user_message})
 
             # Get response from the AI service
-            ai_response = ai_get_response(knowledge_base, user_message, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key, mistral_api_key, mistral_model)
+            ai_response = ai_get_response(knowledge_base, user_message, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key, mistral_api_key)
 
             # Update the chat history with the AI's response
             st.session_state['chat_history'].append({'sender': 'ai', 'message': ai_response})

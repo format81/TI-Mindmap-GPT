@@ -579,7 +579,7 @@ def ai_ttp_graph_timeline(text, client, service_selection, deployment_name=None)
           response = client.chat(
               model="mistral-large-latest",
               messages=[
-                  ChatMessage(role="use", content=user_prompt_ttp_graph_timeline),
+                  ChatMessage(role="user", content=user_prompt_ttp_graph_timeline),
                   ],
             )
           # Return the response content
@@ -637,7 +637,7 @@ def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embe
         knowledge_base = FAISS.from_texts(chunks, embeddings)
     return knowledge_base
 
-def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key, mistral_api_key, mistral_model):
+def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key, mistral_api_key):
     """
     Get a response from a knowledge base using a query.
 
@@ -667,7 +667,7 @@ def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azu
                               azure_endpoint=azure_endpoint
                      )
     elif service_selection == "MistralAI":
-        llm = langchainMistralAI(api_key=mistral_api_key, mistral_model=mistral_model)
+        llm = langchainMistralAI(api_key=mistral_api_key, mistral_model="mistral-large-latest")
     else:
         raise ValueError("Invalid AI service selection")
 
