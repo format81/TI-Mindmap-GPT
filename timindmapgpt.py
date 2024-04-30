@@ -366,7 +366,7 @@ with tab1:
                             if service_selection == "OpenAI" and openai_api_key:
                                 mindmap_code = add_mermaid_theme(ai_run_models(input_text, client, selected_language, service_selection), selected_theme_option)
                             elif service_selection == "Azure OpenAI" and azure_api_key:
-                                mindmap_code = add_mermaid_theme(ai_run_models(input_text, client, selected_language, deployment_name, service_selection), selected_theme_option)
+                                mindmap_code = add_mermaid_theme(ai_run_models(input_text, client, selected_language, service_selection, deployment_name), selected_theme_option)
                             elif service_selection == "MistralAI" and mistral_api_key:
                                 mindmap_code = add_mermaid_theme(ai_run_models(input_text, client, selected_language, service_selection), selected_theme_option)  
                                 
