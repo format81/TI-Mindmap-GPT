@@ -120,8 +120,9 @@ embedding_deployment_name = ""
 openai_api_key = ""
 
 st.set_page_config(
-    page_title="Generative AI Threat Intelligence Mindmap",
-    page_icon=":brain:",
+    page_title="TI Mindmap",
+    #page_icon=":brain:",
+    page_icon="logoTIMINDMAPGPT-small.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -129,14 +130,15 @@ st.set_page_config(
 # Sidebar for OpenAI API Key
 
 with st.sidebar:
+    st.logo("logoTIMINDMAPGPT.png", link=None, icon_image=None)
     st.markdown(
-        "Welcome to TI MINDMAP, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more."
+        "Welcome to **TI MINDMAP**, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more."
     )
     st.markdown("Created by [Antonio Formato](https://www.linkedin.com/in/antonioformato/).")
     st.markdown("Contributor [Oleksiy Meletskiy](https://www.linkedin.com/in/alecm/).")
     # Add "Star on GitHub"
     st.sidebar.markdown(
-        "⭐ Star on GitHub: [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
+        "⭐ :orange[Star on GitHub:] [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
     )
     st.markdown("""---""")
 
@@ -158,7 +160,7 @@ with st.sidebar:
     mistral_api_key = "" 
 
     service_selection = st.sidebar.radio(
-        "Select AI Service",
+        ":orange[**Select AI Service**]",
         ("OpenAI", "Azure OpenAI", "MistralAI")
     )
     if service_selection == "Azure OpenAI":
@@ -216,7 +218,7 @@ with st.sidebar:
 st.sidebar.header("About")
 with st.sidebar:
     st.markdown(
-        "This project should be considered a proof of concept. You are welcome to contribute or give me feedback. Always keep in mind that AI-generated content may be incorrect."
+        "This project should be considered a proof of concept. You are welcome to contribute or give us feedback. *Always keep in mind that AI-generated content may be incorrect.*"
     )
     st.markdown("""---""")
     st.markdown(
@@ -264,8 +266,8 @@ with col2:
 with col2:
     form = st.form("Form to scrape", clear_on_submit=False)
     default_url = ""
-    url = form.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
-    scrape_button = form.form_submit_button("Scrape it")
+    url = form.text_input(":orange[**Enter your URL below:**]", default_url, placeholder="Paste any URL of your choice")
+    scrape_button = form.form_submit_button(":orange[**Scrape it**]")
     form.write("*By clicking 'Scrape it,' the data from any previous session is deleted, and a new working session will be started.*")
     #st.markdown("*Session keys are retained until the entire page is refreshed.*")
     
@@ -299,7 +301,7 @@ with col2:
         #st.write(text)
 
 #Insert containers separated into tabs.
-tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "📈 Pdf Report", "🗃️ Conf file (future release🚧)"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**🗃️ Conf file (future release🚧)**"])
 
 # Form for URL input
 with tab1:  
@@ -318,7 +320,7 @@ with tab1:
         submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer",value=True) 
       
     with cols[0]:  
-        submit_button = form.form_submit_button("Generate")  
+        submit_button = form.form_submit_button(":orange[**Generate**]")  
 
     if submit_button and client:
         text = st.session_state['text']  # Use the text stored in session state 
@@ -422,6 +424,14 @@ with tab1:
                     st.markdown(f'{instruction_text} <a href="{url}" target="_blank"><button>{button_label}</button></a>{instruction_text2}', unsafe_allow_html=True)
         
             # Extracting IOCs and displaying them as a table
+            #if submit_cb_ioc:
+            #    with st.spinner("Extracting IOCs"):
+            #        iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
+            #        if isinstance(iocs_df, pd.DataFrame):
+            #            st.write("### Extracted IOCs")
+            #            st.dataframe(iocs_df)
+            #        else:
+            #            st.error(iocs_df)
             if submit_cb_ioc:
                 with st.spinner("Extracting IOCs"):
                     iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
@@ -552,7 +562,7 @@ with tab3:
     #user_input=""
         
     with cols[0]:
-       submit_button4 = form4.form_submit_button("Generate PDF")
+       submit_button4 = form4.form_submit_button(":orange[**Generate PDF**]")
 
     if submit_button4 and client:  
         text = st.session_state['text']  # Use the text stored in session state  
@@ -599,7 +609,6 @@ with tab3:
                     st.write("### TTPs table")  
                     st.write(ttptable)  
   
-                    # Check if attackpath exists in session state  
                     # Check if attackpath exists in session state 
                     if st.session_state['attackpath']:
                         attackpath = st.session_state['attackpath']  
@@ -609,7 +618,7 @@ with tab3:
                     st.write("### TTPs ordered by execution time")  
                     st.write(attackpath)
 
-            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code, attackpath)
+            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code, attackpath=None)
 
             st.download_button(label="Save report to disk",
                         data=pdf_bytes,
@@ -618,5 +627,22 @@ with tab3:
             
 #TAB4
 with tab4:
+    st.write("📷 Screenshot")
+    # Access the secret API key
+    api_key_thumbnail = st.secrets["api_keys"]["thumbnail"]
+    # Make a request to the API
+    screenshot = requests.get(f"https://api.thumbnail.ws/api/{api_key_thumbnail}/thumbnail/get?url={url}&width=840&delay=1500")
+
+    # If the request is successful, display the image
+    if screenshot.status_code == 200:
+        screenshot_data = screenshot.content  # Store the screenshot image data
+        st.image(screenshot_data)
+        st.session_state['screenshot_data'] = screenshot_data  # Save to session state
+    else:
+        st.write(f"Failed to get the image. Status code: {screenshot.status_code}")
+        st.session_state['screenshot_data'] = None  # Ensure there's a default value
+    
+#TAB5
+with tab5:
     st.write("🗃️ Conf file - future release🚧")
-    st.write("Work in progress")
+    st.write("***Work in progress***")

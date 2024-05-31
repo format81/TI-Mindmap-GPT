@@ -5,6 +5,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
 import base64
+import streamlit as st
+
+from PIL import Image as PILImage
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Image
@@ -88,7 +91,7 @@ def fit_image_to_page(image_data):
     img = Image(image_data, width=new_width, height=new_height)
     return img
 
-def create_pdf_bytes(url, content, mermaid_code, attackpath):
+def create_pdf_bytes(url, content, mermaid_code, attackpath=None):
     # Create a BytesIO object to hold the PDF data
     pdf_bytes_io = BytesIO()
 
@@ -112,6 +115,25 @@ def create_pdf_bytes(url, content, mermaid_code, attackpath):
     flowables.append(Paragraph("REPORT", header1_style))
     flowables.append(Paragraph(f"Original source: <link href='{url}'>{url}</link>", normal_style))  # Adding original source link
     
+    # Make a request to get the screenshot image
+    api_key_thumbnail = st.secrets["api_keys"]["thumbnail"]
+    screenshot = requests.get(f"https://api.thumbnail.ws/api/{api_key_thumbnail}/thumbnail/get?url={url}&width=640&delay=1500")
+
+    # Debugging: Print the content of the screenshot
+    print("Screenshot content:", screenshot.content)
+
+    # If the request is successful, add the image to the PDF
+    if screenshot.status_code == 200:
+        screenshot_data_pdf = screenshot.content  # Store the screenshot image data
+        st.write("Screenshot added to PDF successfully")
+
+        # Add the screenshot image to the PDF
+        flowables.append(Paragraph("SCREENSHOT", header1_style))
+        img = fit_image_to_page(BytesIO(screenshot_data_pdf))
+        flowables.append(img)  # Add the image to the list of flowables
+    else:
+        st.write(f"Failed to get the image. Status code: {screenshot.status_code}")
+        screenshot_data_pdf = None
     
     italic_style = ParagraphStyle(
         name='ItalicText',
@@ -128,7 +150,11 @@ def create_pdf_bytes(url, content, mermaid_code, attackpath):
     flowables.append(Spacer(1, 0.1 * inch))  # Add some space after header
     flowables.append(Paragraph(content, italic_style)) 
     # Split the attackpath into a list of lines  
-    attackpath_lines = attackpath.split('\n')  
+    #attackpath_lines = attackpath.split('\n')  
+    if attackpath:  # Check if attackpath is not None
+        attackpath_lines = attackpath.split('\n')  
+    else:
+        attackpath_lines = []
     # Add attackpath to the PDF  
     flowables.append(Paragraph("TTPs ordered by execution time", header1_style))  
     for line in attackpath_lines:  
