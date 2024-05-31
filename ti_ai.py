@@ -205,7 +205,7 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
     # Combine the selected languages into a string, or default to "English" if none selected
     language = ", ".join(selected_language) if selected_language else "English"
     # Define the SYSTEM prompt with guidelines for creating the mindmap
-    system_prompt1 = (
+    system_prompt = (
         f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. "
         f"This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
         "1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code. \n"
