@@ -1,4 +1,3 @@
 [server]
 enableStaticServing = true
-enableCORS = false
-enableXsrfProtection = false
+enableCORS = true
