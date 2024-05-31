@@ -488,7 +488,7 @@ with tab1:
                 with open(file_name, 'w') as f:  
                     f.write(mitre_layer) 
 
-                streamlit_base_url = "https://ti-mindmap-june.streamlit.app/" 
+                streamlit_base_url = "https://ti-mindmap-june.streamlit.app" 
                 # Define the URL for the MITRE Navigator with your layer  
                 layer_url = f"{streamlit_base_url}/app/static/{unique_id}.json"
 
