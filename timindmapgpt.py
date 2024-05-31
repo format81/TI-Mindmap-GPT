@@ -423,15 +423,6 @@ with tab1:
                     # Create text and a button in Streamlit to open the link
                     st.markdown(f'{instruction_text} <a href="{url}" target="_blank"><button>{button_label}</button></a>{instruction_text2}', unsafe_allow_html=True)
         
-            # Extracting IOCs and displaying them as a table
-            #if submit_cb_ioc:
-            #    with st.spinner("Extracting IOCs"):
-            #        iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
-            #        if isinstance(iocs_df, pd.DataFrame):
-            #            st.write("### Extracted IOCs")
-            #            st.dataframe(iocs_df)
-            #        else:
-            #            st.error(iocs_df)
             if submit_cb_ioc:
                 with st.spinner("Extracting IOCs"):
                     iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
@@ -497,14 +488,22 @@ with tab1:
                 with open(file_name, 'w') as f:  
                     f.write(mitre_layer) 
 
-                streamlit_base_url = "https://ti-mindmap-gpt.streamlit.app"
+                streamlit_base_url = "https://ti-mindmap-june.streamlit.app/" 
                 # Define the URL for the MITRE Navigator with your layer  
                 layer_url = f"{streamlit_base_url}/app/static/{unique_id}.json"
 
-                # Embed the Navigator in an iframe  
+                # JSON layer file  
                 st.write("Here is the JSON layer file that you can import into the [MITRE ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/).")
                 st.json(mitre_layer, expanded=True)
                 st.markdown(f"📃 [![Mitre layer json file](./app/static/{unique_id}.json)]({layer_url})")
+
+                # Embed the Navigator in an iframe
+                navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={layer_url}"
+                iframe_navigator_html = f"""  
+                <iframe src="{navigator_iframe_url}" width="1200" height="800" frameborder="0"></iframe>  
+                """
+                st.write("##Mitre Navigator##")
+                html(iframe_navigator_html)  
                 
     elif submit_button and not client:
         st.error("Please enter a valid OpenAI API key to generate the mindmap.")
