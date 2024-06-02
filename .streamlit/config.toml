@@ -1,3 +1,6 @@
 [server]
 enableStaticServing = true
 enableCORS = true
+
+[theme]
+backgroundColor="#FFB3B3"
