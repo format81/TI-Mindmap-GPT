@@ -2,3 +2,4 @@
 enableCORS = false
 enableXsrfProtection = false
 enableStaticServing = true
+headless = false
