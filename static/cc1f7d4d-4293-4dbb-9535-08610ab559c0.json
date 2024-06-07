@@ -1,0 +1,140 @@
+{
+    "name": "Operation Blacksmith",
+    "description": "TTPs identified in Lazarus Group's Operation Blacksmith for espionage on behalf of North Korean government interests",
+    "domain": "enterprise-attack",
+    "version": "4.5",
+    "attack_version": "14",
+    "navigator_version": "4.9.1",
+    "techniques": [
+        {
+            "techniqueID": "T1190",
+            "tactic": "initial-access",
+            "comment": "Initial access begun with successful exploitation of CVE-2021-44228 (Log4Shell) on publicly visible VMWare Horizon servers",
+            "enabled": true,
+            "color": "#005a9e"
+        },
+        {
+            "techniqueID": "T1547.001",
+            "tactic": "persistence",
+            "comment": "Persistence achieved through a '.URL' file in the startup directory that runs a PowerShell command",
+            "enabled": true,
+            "color": "#8ec843"
+        },
+        {
+            "techniqueID": "T1059.001",
+            "tactic": "execution",
+            "comment": "PowerShell used to download and execute next-stage payload from remote host",
+            "enabled": true,
+            "color": "#009abc"
+        },
+        {
+            "techniqueID": "T1219",
+            "tactic": "persistence",
+            "comment": "Remote Access Trojans DLRAT and NineRAT used for C2 communications; NineRAT's C2 channel implemented on Telegram",
+            "enabled": true,
+            "color": "#8ec843"
+        },
+        {
+            "techniqueID": "T1082",
+            "tactic": "discovery",
+            "comment": "Multiple commands (`whoami`, `getmac`, `ver`, etc.), were run for system information discovery",
+            "enabled": true,
+            "color": "#009abc"
+        },
+        {
+            "techniqueID": "T1505",
+            "tactic": "persistence",
+            "comment": "Deployment of custom-made implant 'HazyLoad' on the system after initial reconnaissance for direct access without repeated exploitation",
+            "enabled": true,
+            "color": "#8ec843"
+        },
+        {
+            "techniqueID": "T1550.001",
+            "tactic": "persistence",
+            "comment": "Unauthorized local user account with administrative privileges created for perpetrator use",
+            "enabled": true,
+            "color": "#8ec843"
+        },
+        {
+            "techniqueID": "T1003.005",
+            "tactic": "credential-access",
+            "comment": "Credential dumping tools like ProcDump and MimiKatz were utilized for credential harvesting",
+            "enabled": true,
+            "color": "#005a9e"
+        },
+        {
+            "techniqueID": "TA0005",
+            "tactic": "defense-evasion",
+            "comment": "Use of Telegram by Lazarus to evade network and host-based detection measures; deployment of an additional command-line argument in a PowerShell LNK file to evade anti-virus products",
+            "enabled": true,
+            "color": "#8ec843"
+        },
+        {
+            "techniqueID": "T1048",
+            "tactic": "exfiltration",
+            "comment": "Utilisation of Telegram as an alternative protocol for data exfiltration",
+            "enabled": true,
+            "color": "#ff6666"
+        },
+        {
+            "techniqueID": "T1074.001",
+            "tactic": "collection",
+            "comment": "Collected data staged for exfiltration on a remote system",
+            "enabled": true,
+            "color": "#009abc"
+        },
+        {
+            "techniqueID": "T1105",
+            "tactic": "command-and-control",
+            "comment": "Transfer of tools into the compromised environment",
+            "enabled": true,
+            "color": "#005a9e"
+        },
+        {
+            "techniqueID": "T1204",
+            "tactic": "initial-access",
+            "comment": "Attacks implemented via user-execution of dropped file masqueraded as legitimate",
+            "enabled": true,
+            "color": "#005a9e"
+        },
+        {
+            "techniqueID": "T1098",
+            "tactic": "persistence",
+            "comment": "Creation of additional user account with administrative privileges on system",
+            "enabled": true,
+            "color": "#8ec843"
+        },
+        {
+            "techniqueID": "T1087",
+            "tactic": "discovery",
+            "comment": "Discovery of user accounts on system",
+            "enabled": true,
+            "color": "#009abc"
+        }
+    ],
+    "platforms": [
+        "Windows"
+    ],
+    "gradient": {
+        "colors": [
+            "#c5c5c5",
+            "#ff6666"
+        ],
+        "minValue": 0,
+        "maxValue": 1
+    },
+    "metadata": [],
+    "showTacticRowBackground": false,
+    "tacticRowBackground": "#dddddd",
+    "selectTechniquesAcrossTactics": true,
+    "legendItems": [
+        {
+            "label": "Used by Lazarus Group",
+            "color": "#ff6666"
+        },
+        {
+            "label": "Not used",
+            "color": "#c5c5c5"
+        }
+    ]
+}

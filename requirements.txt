@@ -17,3 +17,4 @@ ipython
 reportlab
 langchain-mistralai==0.1.4
 mistralai==0.1.8
+PyGithub

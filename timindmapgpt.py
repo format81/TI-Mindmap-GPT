@@ -9,15 +9,18 @@ import urllib.parse
 import os
 import json
 from uuid import uuid4
-
 from ti_mermaid import mermaid_timeline_graph, mermaid_chart_png
 from ti_mermaid_live import genPakoLink
 from ti_ai import ai_check_content_relevance, ai_extract_iocs, ai_get_response, ai_process_text, ai_run_models_tweet, ai_summarise, ai_summarise_tweet, ai_run_models, ai_ttp, ai_ttp_graph_timeline, ai_ttp_list
 import ti_pdf
 import ti_mermaid
 import ti_navigator
-
 from mistralai.client import MistralClient
+from github import Github
+
+# GitHub credentials
+GITHUB_TOKEN = st.secrets["api_keys"]["github_accesstoken"]
+REPO_NAME = "format81/ti-mindmap-storage"
 
 # Check if static directory exists, if not, create it  
 if not os.path.exists('./static'):  
@@ -108,6 +111,34 @@ def add_mermaid_theme(mermaid_code, selected_theme):
     
     return f"%%{{ init: {{'theme': '{theme}'}}}}%%\n{mermaid_code}"
 
+def upload_to_github(json_content):
+    g = Github(GITHUB_TOKEN)
+    repo = g.get_repo(REPO_NAME)
+    commit_message = "Updated via Streamlit app"
+
+    # Generate a unique file name
+    unique_id = str(uuid4())
+    file_path = f"navigator/{unique_id}.json"
+
+    # Convert JSON to string
+    json_str = json.dumps(json_content, indent=4)
+
+    try:
+        # Get the file contents from GitHub
+        contents = repo.get_contents(file_path)
+        sha = contents.sha
+        # Update the file
+        repo.update_file(contents.path, commit_message, json_str, sha)
+        st.success("File updated successfully.")
+    except:
+        # If file does not exist, create it
+        repo.create_file(file_path, commit_message, json_str)
+        st.success("File created successfully.")
+
+    # Return the raw URL of the uploaded JSON file
+    raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/main/{file_path}"
+    st.write(raw_url)
+    return raw_url
 
 #----------------------------------------------------------------#
 # ------------------ Streamlit UI Configuration -----------------#
@@ -487,26 +518,23 @@ with tab1:
                 # Write the layer data to a file  
                 with open(file_name, 'w') as f:  
                     f.write(mitre_layer) 
+                
+                # Display the JSON content
+                st.json(json.loads(mitre_layer))
 
-                streamlit_base_url = "https://ti-mindmap-june.streamlit.app" 
-                # Define the URL for the MITRE Navigator with your layer  
-                layer_url = f"{streamlit_base_url}/app/static/{unique_id}.json"
-
-                # JSON layer file  
-                st.write("Here is the JSON layer file that you can import into the [MITRE ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/).")
-                st.json(mitre_layer, expanded=True)
-                st.markdown(f"📃 [![Mitre layer json file](./app/static/{unique_id}.json)]({layer_url})")
+                # Upload the layer data to GitHub and get the raw URL
+                raw_url = upload_to_github(json.loads(mitre_layer))
 
                 # Embed the Navigator in an iframe
-                navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={layer_url}"
-                iframe_navigator_html = f"""  
-                <iframe src="{navigator_iframe_url}" width="1200" height="800" frameborder="0"></iframe>  
+                navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={raw_url}"
+                iframe_navigator_html = f"""
+                <iframe src="{navigator_iframe_url}" width="1200" height="800" frameborder="0"></iframe>
                 """
-                st.write("##Mitre Navigator##")
-                html(iframe_navigator_html)  
+                st.write("## Mitre Navigator ##")
+                st.markdown(iframe_navigator_html, unsafe_allow_html=True)  
                 
-    elif submit_button and not client:
-        st.error("Please enter a valid OpenAI API key to generate the mindmap.")
+            elif submit_button and not client:
+                st.error("Please enter a valid OpenAI API key to generate the mindmap.")
 
     #TAB2   
     with tab2:
