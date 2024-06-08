@@ -524,7 +524,7 @@ with tab1:
 
                 # Upload the layer data to GitHub and get the raw URL
                 raw_url = upload_to_github(json.loads(mitre_layer))
-                st.write(raw_url)
+                #st.write(raw_url)
 
                 # Embed the Navigator in an iframe
                 navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={raw_url}"
