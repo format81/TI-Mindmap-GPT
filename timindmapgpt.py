@@ -332,7 +332,7 @@ with col2:
         #st.write(text)
 
 #Insert containers separated into tabs.
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - future release**", "**🗃️ Conf file (future release🚧)**"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - (future release🚧)**", "**🗃️ Conf file (future release🚧)**"])
 
 # Form for URL input
 with tab1:  
