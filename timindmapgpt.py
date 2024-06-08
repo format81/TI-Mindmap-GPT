@@ -332,7 +332,7 @@ with col2:
         #st.write(text)
 
 #Insert containers separated into tabs.
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**🗃️ Conf file (future release🚧)**"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - future release**", "**🗃️ Conf file (future release🚧)**"])
 
 # Form for URL input
 with tab1:  
@@ -524,6 +524,7 @@ with tab1:
 
                 # Upload the layer data to GitHub and get the raw URL
                 raw_url = upload_to_github(json.loads(mitre_layer))
+                st.write(raw_url)
 
                 # Embed the Navigator in an iframe
                 navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={raw_url}"
@@ -671,5 +672,10 @@ with tab4:
     
 #TAB5
 with tab5:
+    st.write("📋 STIX 2.1 generator - future release🚧")
+    st.write("***Work in progress***")
+
+#TAB6
+with tab6:
     st.write("🗃️ Conf file - future release🚧")
     st.write("***Work in progress***")
