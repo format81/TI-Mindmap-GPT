@@ -9,15 +9,18 @@ import urllib.parse
 import os
 import json
 from uuid import uuid4
-
 from ti_mermaid import mermaid_timeline_graph, mermaid_chart_png
 from ti_mermaid_live import genPakoLink
 from ti_ai import ai_check_content_relevance, ai_extract_iocs, ai_get_response, ai_process_text, ai_run_models_tweet, ai_summarise, ai_summarise_tweet, ai_run_models, ai_ttp, ai_ttp_graph_timeline, ai_ttp_list
 import ti_pdf
 import ti_mermaid
 import ti_navigator
-
 from mistralai.client import MistralClient
+from github import Github
+
+# GitHub credentials
+GITHUB_TOKEN = st.secrets["api_keys"]["github_accesstoken"]
+REPO_NAME = "format81/ti-mindmap-storage"
 
 # Check if static directory exists, if not, create it  
 if not os.path.exists('./static'):  
@@ -108,6 +111,49 @@ def add_mermaid_theme(mermaid_code, selected_theme):
     
     return f"%%{{ init: {{'theme': '{theme}'}}}}%%\n{mermaid_code}"
 
+def upload_to_github(json_content):
+    """
+    Uploads JSON content to a specified GitHub repository.
+
+    This function takes JSON content, converts it to a string, and uploads it to a GitHub
+    repository. If the file with the specified path exists, it updates the file; otherwise,
+    it creates a new file. The function uses a unique identifier to generate the file name
+    to avoid conflicts. After uploading, it returns the raw URL of the uploaded JSON file.
+
+    Parameters:
+    json_content (dict): The JSON content to be uploaded to GitHub.
+
+    Returns:
+    str: The raw URL of the uploaded JSON file.
+    """
+    g = Github(GITHUB_TOKEN)
+    repo = g.get_repo(REPO_NAME)
+    commit_message = "Updated via Streamlit app"
+
+    # Generate a unique file name
+    unique_id = str(uuid4())
+    file_path = f"mitre-navigator/{unique_id}.json"
+
+    # Convert JSON to string
+    json_str = json.dumps(json_content, indent=4)
+
+    try:
+        # Get the file contents from GitHub
+        contents = repo.get_contents(file_path)
+        sha = contents.sha
+        # Update the file
+        repo.update_file(contents.path, commit_message, json_str, sha)
+        st.success("File updated successfully.")
+    except:
+        # If file does not exist, create it
+        repo.create_file(file_path, commit_message, json_str)
+        st.success("File created successfully.")
+
+    # Return the raw URL of the uploaded JSON file
+    raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/main/{file_path}"
+    st.write("URL to json Mitre Navigator file:")
+    st.write(raw_url)
+    return raw_url
 
 #----------------------------------------------------------------#
 # ------------------ Streamlit UI Configuration -----------------#
@@ -120,8 +166,8 @@ embedding_deployment_name = ""
 openai_api_key = ""
 
 st.set_page_config(
-    page_title="Generative AI Threat Intelligence Mindmap",
-    page_icon=":brain:",
+    page_title="TI Mindmap",
+    page_icon="logoTIMINDMAPGPT-small.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -129,14 +175,15 @@ st.set_page_config(
 # Sidebar for OpenAI API Key
 
 with st.sidebar:
+    st.logo("logoTIMINDMAPGPT.png", link=None, icon_image=None)
     st.markdown(
-        "Welcome to TI MINDMAP, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more."
+        "Welcome to **TI MINDMAP**, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more."
     )
     st.markdown("Created by [Antonio Formato](https://www.linkedin.com/in/antonioformato/).")
     st.markdown("Contributor [Oleksiy Meletskiy](https://www.linkedin.com/in/alecm/).")
     # Add "Star on GitHub"
     st.sidebar.markdown(
-        "⭐ Star on GitHub: [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
+        "⭐ :orange[Star on GitHub:] [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)"
     )
     st.markdown("""---""")
 
@@ -158,7 +205,7 @@ with st.sidebar:
     mistral_api_key = "" 
 
     service_selection = st.sidebar.radio(
-        "Select AI Service",
+        ":orange[**Select AI Service**]",
         ("OpenAI", "Azure OpenAI", "MistralAI")
     )
     if service_selection == "Azure OpenAI":
@@ -216,7 +263,7 @@ with st.sidebar:
 st.sidebar.header("About")
 with st.sidebar:
     st.markdown(
-        "This project should be considered a proof of concept. You are welcome to contribute or give me feedback. Always keep in mind that AI-generated content may be incorrect."
+        "This project should be considered a proof of concept. You are welcome to contribute or give us feedback. *Always keep in mind that AI-generated content may be incorrect.*"
     )
     st.markdown("""---""")
     st.markdown(
@@ -264,8 +311,8 @@ with col2:
 with col2:
     form = st.form("Form to scrape", clear_on_submit=False)
     default_url = ""
-    url = form.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
-    scrape_button = form.form_submit_button("Scrape it")
+    url = form.text_input(":orange[**Enter your URL below:**]", default_url, placeholder="Paste any URL of your choice")
+    scrape_button = form.form_submit_button(":orange[**Scrape it**]")
     form.write("*By clicking 'Scrape it,' the data from any previous session is deleted, and a new working session will be started.*")
     #st.markdown("*Session keys are retained until the entire page is refreshed.*")
     
@@ -287,6 +334,7 @@ with col2:
         st.session_state['mindmap_code'] = ""  # Clear mindmap_code when new URL is scraped
         st.session_state['ttptable'] = "" # Clear ttptable
         st.session_state['attackpath'] = "" # Clear attackpath
+        st.session_state['iocs_df'] = "" # Clear iocs_df
         
         # Check if the content is related to cybersecurity
         #relevance_check = check_content_relevance(text2, client, service_selection)
@@ -299,7 +347,7 @@ with col2:
         #st.write(text)
 
 #Insert containers separated into tabs.
-tab1, tab2, tab3, tab4 = st.tabs(["🗃 Main", "💾 AI Chat with your data", "📈 Pdf Report", "🗃️ Conf file (future release🚧)"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - (future release🚧)**", "**🗃️ Conf file (future release🚧)**"])
 
 # Form for URL input
 with tab1:  
@@ -310,15 +358,15 @@ with tab1:
   
     with cols[1]:  
         submit_cb_summary = form.checkbox("🗺️Summary and MindMap",value=True)  
-        submit_cb_tweet = form.checkbox("📺I want to tweet MindMap",value=True)  
-        submit_cb_ioc = form.checkbox("🧐I want to extract IOCs (if present)",value=True)  
+        submit_cb_tweet = form.checkbox("📺Tweet MindMap",value=True)  
+        submit_cb_ioc = form.checkbox("🧐Extract IOCs (if present)",value=True)  
         submit_cb_ttps = form.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)  
         submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)  
-        submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True) 
-        submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer",value=True) 
+        submit_cb_ttps_timeline = form.checkbox("📈TTPs graphic timeline",value=True) 
+        submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer *(The layer file is published on the [repository](https://github.com/format81/ti-mindmap-storage/) to be used by TI Mindmap.)*",value=True)
       
     with cols[0]:  
-        submit_button = form.form_submit_button("Generate")  
+        submit_button = form.form_submit_button(":orange[**Generate**]")  
 
     if submit_button and client:
         text = st.session_state['text']  # Use the text stored in session state 
@@ -421,15 +469,18 @@ with tab1:
                     # Create text and a button in Streamlit to open the link
                     st.markdown(f'{instruction_text} <a href="{url}" target="_blank"><button>{button_label}</button></a>{instruction_text2}', unsafe_allow_html=True)
         
-            # Extracting IOCs and displaying them as a table
             if submit_cb_ioc:
                 with st.spinner("Extracting IOCs"):
-                    iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
-                    if isinstance(iocs_df, pd.DataFrame):
-                        st.write("### Extracted IOCs")
-                        st.dataframe(iocs_df)
+                    # Check if IOCs exist in session state  
+                    if st.session_state['iocs_df']:  
+                        iocs_df = st.session_state['iocs_df']  
                     else:
-                        st.error(iocs_df)
+                        iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
+                        if isinstance(iocs_df, pd.DataFrame):
+                            st.write("### Extracted IOCs")
+                            st.dataframe(iocs_df)
+                        else:
+                            st.error(iocs_df)
 
             # Extracting TTPs and displaying them as a table
             if submit_cb_ttps:
@@ -453,31 +504,32 @@ with tab1:
 
             # Mermaid TTPs timeline
             if submit_cb_ttps_timeline:
-                #with st.spinner("Mermaid TTPs Timeline"):
-                mermaid_timeline = ai_ttp_graph_timeline(text, client, service_selection, deployment_name)
-                with st.expander("See LLM Generated Mermaid TTPs Timeline"):
-                    st.code(mermaid_timeline)
-                html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
-                mermaid_link2 = genPakoLink(mermaid_timeline)
-                st.link_button("Open code in Mermaid.live", mermaid_link2)
+                with st.spinner("Mermaid TTPs Timeline"):
+                    mermaid_timeline = ai_ttp_graph_timeline(text, client, service_selection, deployment_name)
+                    with st.expander("See LLM Generated Mermaid TTPs Timeline"):
+                        st.code(mermaid_timeline)
+                    html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
+                    mermaid_link2 = genPakoLink(mermaid_timeline)
+                    st.link_button("Open code in Mermaid.live", mermaid_link2)
 
             #Mitre Navigator layer
             if submit_cb_navigator:
-                mitre_layer = ti_navigator.attack_layer(text, ttptable, client, service_selection, deployment_name)
-                # Check if mitre_layer is valid JSON
-                try:
-                    json.loads(mitre_layer)
-                except json.JSONDecodeError:
-                    st.error("The generated layer is not a valid JSON file.")
-                    if st.button("Click here to regenerate the layer"):
-                        mitre_layer = ti_navigator.attack_layer(text, client, service_selection, deployment_name)
-                        try:
-                            json.loads(mitre_layer)
-                        except json.JSONDecodeError:
-                            st.error("Failed to regenerate the layer. Please try again.")
-                            st.stop()  # Stop further execution
-                        else:
-                            st.success("Layer regenerated successfully.")
+                with st.spinner("MITRE Navigator Layer"):
+                    mitre_layer = ti_navigator.attack_layer(text, ttptable, client, service_selection, deployment_name)
+                    # Check if mitre_layer is valid JSON
+                    try:
+                        json.loads(mitre_layer)
+                    except json.JSONDecodeError:
+                        st.error("The generated layer is not a valid JSON file.")
+                        if st.button("Click here to regenerate the layer"):
+                            mitre_layer = ti_navigator.attack_layer(text, client, service_selection, deployment_name)
+                            try:
+                                json.loads(mitre_layer)
+                            except json.JSONDecodeError:
+                                st.error("Failed to regenerate the layer. Please try again.")
+                                st.stop()  # Stop further execution
+                            else:
+                                st.success("Layer regenerated successfully.")
                         
                 st.write("### MITRE ATT&CK Navigator layer json")
                 unique_id = str(uuid4())  # Create a unique ID  
@@ -486,18 +538,23 @@ with tab1:
                 # Write the layer data to a file  
                 with open(file_name, 'w') as f:  
                     f.write(mitre_layer) 
-
-                streamlit_base_url = "https://ti-mindmap-gpt.streamlit.app"
-                # Define the URL for the MITRE Navigator with your layer  
-                layer_url = f"{streamlit_base_url}/app/static/{unique_id}.json"
-
-                # Embed the Navigator in an iframe  
-                st.write("Here is the JSON layer file that you can import into the [MITRE ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/).")
-                st.json(mitre_layer, expanded=True)
-                st.markdown(f"📃 [![Mitre layer json file](./app/static/{unique_id}.json)]({layer_url})")
                 
-    elif submit_button and not client:
-        st.error("Please enter a valid OpenAI API key to generate the mindmap.")
+                # Display the JSON content
+                st.json(json.loads(mitre_layer))
+
+                # Upload the layer data to GitHub and get the raw URL
+                raw_url = upload_to_github(json.loads(mitre_layer))
+
+                # Embed the Navigator in an iframe
+                navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={raw_url}"
+                iframe_navigator_html = f"""
+                <iframe src="{navigator_iframe_url}" width="1200" height="800" frameborder="0"></iframe>
+                """
+                st.write("## Mitre Navigator ##")
+                st.markdown(iframe_navigator_html, unsafe_allow_html=True)  
+                
+            elif submit_button and not client:
+                st.error("Please enter a valid OpenAI API key to generate the mindmap.")
 
     #TAB2   
     with tab2:
@@ -552,7 +609,7 @@ with tab3:
     #user_input=""
         
     with cols[0]:
-       submit_button4 = form4.form_submit_button("Generate PDF")
+       submit_button4 = form4.form_submit_button(":orange[**Generate PDF**]")
 
     if submit_button4 and client:  
         text = st.session_state['text']  # Use the text stored in session state  
@@ -599,7 +656,6 @@ with tab3:
                     st.write("### TTPs table")  
                     st.write(ttptable)  
   
-                    # Check if attackpath exists in session state  
                     # Check if attackpath exists in session state 
                     if st.session_state['attackpath']:
                         attackpath = st.session_state['attackpath']  
@@ -609,7 +665,7 @@ with tab3:
                     st.write("### TTPs ordered by execution time")  
                     st.write(attackpath)
 
-            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code, attackpath)
+            pdf_bytes = ti_pdf.create_pdf_bytes(st.session_state['url4'], summary, mindmap_code, attackpath=None)
 
             st.download_button(label="Save report to disk",
                         data=pdf_bytes,
@@ -618,5 +674,28 @@ with tab3:
             
 #TAB4
 with tab4:
+    st.write("📷 Screenshot")
+    # Access the secret API key
+    api_key_thumbnail = st.secrets["api_keys"]["thumbnail"]
+    # Make a request to the API
+    screenshot = requests.get(f"https://api.thumbnail.ws/api/{api_key_thumbnail}/thumbnail/get?url={url}&width=840&delay=1500")
+
+    # If the request is successful, display the image
+    if screenshot.status_code == 200:
+        screenshot_data = screenshot.content  # Store the screenshot image data
+        st.image(screenshot_data)
+        st.session_state['screenshot_data'] = screenshot_data  # Save to session state
+    else:
+        st.write(f"Failed to get the image. Status code: {screenshot.status_code}")
+        st.session_state['screenshot_data'] = None  # Ensure there's a default value
+    
+#TAB5
+with tab5:
+    st.write("📋 STIX 2.1 generator - future release🚧")
+    st.write("***Work in progress***")
+    st.write("We are working on an initial version of a STIX 2.1 report generator. We will release the functionality as soon as it is tested and operational. Stay tuned.")
+
+#TAB6
+with tab6:
     st.write("🗃️ Conf file - future release🚧")
-    st.write("Work in progress")
+    st.write("***Work in progress***")

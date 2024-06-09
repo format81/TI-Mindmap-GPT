@@ -1,3 +1,4 @@
+import streamlit as st
 from langchain.chains.question_answering import load_qa_chain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.callbacks import get_openai_callback
@@ -7,10 +8,13 @@ from langchain_mistralai.chat_models import ChatMistralAI as langchainMistralAI
 from langchain_mistralai import MistralAIEmbeddings
 import pandas as pd
 from mistralai.models.chat_completion import ChatMessage
+import pandas as pd
+import hashlib
 
 OPENAI_MODEL = "gpt-4-1106-preview"
 
 # Function to summarize the blog to create a short tweet, it work for both OpenAI and Azure OpenAI
+
 def ai_summarise_tweet(input_text, client, ai_service_provider, selected_language, deployment_name=None):
     """
     Summarizes a long text using a language model.
@@ -28,7 +32,7 @@ def ai_summarise_tweet(input_text, client, ai_service_provider, selected_languag
     Raises:
         ValueError: If the input parameters are invalid.
 
-    """
+    """ 
    # Combine the selected languages into a string, or default to "English" if none selected
     if not input_text or not client or not ai_service_provider:
         return "Invalid input parameters."
@@ -37,7 +41,7 @@ def ai_summarise_tweet(input_text, client, ai_service_provider, selected_languag
     language = ", ".join(selected_language) if selected_language else "English"
 
     system_message = f"You are responsible for creating a short tweet in {language} for a Threat Analyst. Write a tweet summary that contains maximum 250 symbols and will summarize the main topic and the key findings relevant for a threat analyst. You can add an emoji. Add tag #timindmap"
-
+   
     try:
         if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
             # Determine the model based on the service provider
@@ -53,6 +57,7 @@ def ai_summarise_tweet(input_text, client, ai_service_provider, selected_languag
             )
         
             return response.choices[0].message.content
+            
         elif ai_service_provider == "MistralAI":
             chat_response = client.chat(
             model = "mistral-large-latest",
@@ -125,7 +130,6 @@ def ai_summarise(input_text, client, ai_service_provider, selected_language, dep
         # Return a more informative error message
         return f"An error occurred while generating the summary: {e}"
 
-
 # Function to check if content is related to cybersecurity
 def ai_check_content_relevance(input_text, client, ai_service_provider, deployment_name=None):
     """
@@ -176,7 +180,6 @@ def ai_check_content_relevance(input_text, client, ai_service_provider, deployme
         # Return a more informative error message
         return f"An error occurred while checking content relevance: {e}"
 
-
 def ai_run_models(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
     Runs the AI models to generate a mindmap.
@@ -210,15 +213,16 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
         "3. Incorporate icons where suitable to enhance readability and comprehension. \n"
         "4. You MUST use single parentheses around each node to give them a rounded shape. \n"
         "5. Avoid using icons and emojis. \n "
-        "6. Do not insert spaces after the text of each line and do not use parentheses or special characters for the names of the chart fields. \n "
+        "6. DO NOT insert spaces after the text of each line and DO NOT use parentheses or special characters for the names of the chart fields. \n "
         "7. Start mermaid code with word mindmap, don't use anythong else in first line. \n "
-        "8. Don't write ``` as the first and last line. \n"
+        "8. DO NOT write ``` as the first and last line. \n"
         "9. Avoid using a line with style root. \n"
         "10. Avoid closing with any comment starting with #. \n"
-        "11. Do not use theme as the second line; the second line must start with root syntax. \n"
+        "11. DO NOT use theme as the second line; the second line must start with root syntax. \n"
         "12. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
         "13. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n"
         "14. Instead of using the following approach (Indicators of compromise (IOC) provided), use this: (Indicators of compromise - IOC - provided). \n"
+        "15. DO NOT close line with . but use just )"
     )
     # Define the USER prompt
     user_prompt = (
@@ -260,7 +264,6 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while generating the mindmap: {e}"
-
 
 def ai_run_models_tweet(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
@@ -352,11 +355,23 @@ def create_dataframe_from_response(response):
         data = [line.split(",") for line in response_content.strip().split("\n")]  
         max_columns = max(len(row) for row in data)  
         standardized_data = [row + [''] * (max_columns - len(row)) for row in data]  
-        df = pd.DataFrame(standardized_data[1:], columns=standardized_data[0])  
+        df = pd.DataFrame(standardized_data[1:], columns=standardized_data[0])
         return df  
     except Exception as e:  
         raise ValueError(f"Failed to extract and parse IOCs: {e}")
+    
+# Function to calculate the SHA256 hash of a URL
+def calculate_sha256(url):
+    sha256_hash = hashlib.sha256(url.encode()).hexdigest()
+    return sha256_hash
 
+# Function to update VirusTotal URLs for URL type indicators in the DataFrame
+def update_virus_total_urls(ioc_dataframe):
+    for index, row in ioc_dataframe.iterrows():
+        if row["Type"] == "URL":
+            sha256 = calculate_sha256(row["Indicator"])
+            ioc_dataframe.at[index, "Virus Total URL"] = f"https://www.virustotal.com/gui/url/{sha256}"
+    return ioc_dataframe
 
 def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=None):
     """  
@@ -380,9 +395,14 @@ def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=Non
     prompt = (
         "You are tasked with extracting IOCs from the following blog post for a threat analyst. "
         "Provide a structured, table-like format, with rows separated by newlines and columns by commas "
-        "with the following rows: Indicator, Type, Description. Extract indicators just if you are able to find them "
+        "with the following column: Indicator, Type, Description, Virus Total URL. Extract indicators just if you are able to find them "
         "in the blog post provided. With reference to IP addresses, URLs, and domains, remove square brackets. "
-        "Examples: tech[.]micrsofts[.]com will be tech.micrsofts.com and 27.102.113.93"
+        "Example: tech[.]micrsofts[.]com will be tech.micrsofts.com and 27.102.113.93"
+        "Example: hxxp://27.102.113.93/inet[.]txt] will be http://27.102.113.93/inet.txt]" 
+        "In the Virus Total URL column, enter a URL composed in the following way:" 
+        "1. if type is SHA: https://www.virustotal.com/gui/file/[content of the Indicator row]"
+        "2. if type is IP: https://www.virustotal.com/gui/ip-address/[content of the Indicator row]"
+        "3. if type is URL: https://www.virustotal.com/gui/url/[SHACalculator]"
     )
 
     try:
@@ -396,7 +416,8 @@ def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=Non
                 messages=[{"role": "system", "content": prompt + "\n\n" + input_text}],
             )
 
-            return create_dataframe_from_response(response)
+            #return create_dataframe_from_response(response)
+            ioc_dataframe = create_dataframe_from_response(response)
         elif ai_service_provider == "MistralAI":
             chat_response = client.chat(
             model = "mistral-large-latest",
@@ -404,9 +425,14 @@ def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=Non
                 ChatMessage(role="system", content=prompt + "\n\n" + input_text),
                 ],
             )
-            return create_dataframe_from_response(chat_response)  
+            #return create_dataframe_from_response(chat_response) 
+            ioc_dataframe = create_dataframe_from_response(chat_response)
+
+        return ioc_dataframe
+ 
     except Exception as e:  
         return f"Failed to extract and parse IOCs: {e}"  
+
 
 #Extract TTPs table
 def ai_ttp(text, client,service_selection, deployment_name=None):

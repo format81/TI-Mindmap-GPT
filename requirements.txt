@@ -7,7 +7,8 @@ pandas
 langchain
 langchain_community
 langchain_openai
-faiss-cpu==1.7.1.post2
+#faiss-cpu==1.7.1.post2
+faiss-cpu==1.8.0
 urllib3
 matplotlib
 pillow
@@ -16,3 +17,4 @@ ipython
 reportlab
 langchain-mistralai==0.1.4
 mistralai==0.1.8
+PyGithub

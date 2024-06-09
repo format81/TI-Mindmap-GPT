@@ -1,4 +1,4 @@
-![TI MINDMAP GPT](logoTIMINDMAPGPT-small.png)
+<img src="logoTIMINDMAPGPT-small.png" alt="TI MINDMAP GPT" width="200" height="200"/>
 
 Welcome to TI MINDMAP GPT, an AI-powered tool designed to help producing Threat Intelligence Mindmap.
 

@@ -1,2 +1,4 @@
 [server]
-enableStaticServing = "true"
+enableCORS = false
+enableXsrfProtection = false
+enableStaticServing = true
