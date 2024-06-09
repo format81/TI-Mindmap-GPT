@@ -112,13 +112,27 @@ def add_mermaid_theme(mermaid_code, selected_theme):
     return f"%%{{ init: {{'theme': '{theme}'}}}}%%\n{mermaid_code}"
 
 def upload_to_github(json_content):
+    """
+    Uploads JSON content to a specified GitHub repository.
+
+    This function takes JSON content, converts it to a string, and uploads it to a GitHub
+    repository. If the file with the specified path exists, it updates the file; otherwise,
+    it creates a new file. The function uses a unique identifier to generate the file name
+    to avoid conflicts. After uploading, it returns the raw URL of the uploaded JSON file.
+
+    Parameters:
+    json_content (dict): The JSON content to be uploaded to GitHub.
+
+    Returns:
+    str: The raw URL of the uploaded JSON file.
+    """
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(REPO_NAME)
     commit_message = "Updated via Streamlit app"
 
     # Generate a unique file name
     unique_id = str(uuid4())
-    file_path = f"navigator/{unique_id}.json"
+    file_path = f"mitre-navigator/{unique_id}.json"
 
     # Convert JSON to string
     json_str = json.dumps(json_content, indent=4)
@@ -137,6 +151,7 @@ def upload_to_github(json_content):
 
     # Return the raw URL of the uploaded JSON file
     raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/main/{file_path}"
+    st.write("URL to json Mitre Navigator file:")
     st.write(raw_url)
     return raw_url
 
@@ -152,7 +167,6 @@ openai_api_key = ""
 
 st.set_page_config(
     page_title="TI Mindmap",
-    #page_icon=":brain:",
     page_icon="logoTIMINDMAPGPT-small.png",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -320,6 +334,7 @@ with col2:
         st.session_state['mindmap_code'] = ""  # Clear mindmap_code when new URL is scraped
         st.session_state['ttptable'] = "" # Clear ttptable
         st.session_state['attackpath'] = "" # Clear attackpath
+        st.session_state['iocs_df'] = "" # Clear iocs_df
         
         # Check if the content is related to cybersecurity
         #relevance_check = check_content_relevance(text2, client, service_selection)
@@ -343,12 +358,12 @@ with tab1:
   
     with cols[1]:  
         submit_cb_summary = form.checkbox("🗺️Summary and MindMap",value=True)  
-        submit_cb_tweet = form.checkbox("📺I want to tweet MindMap",value=True)  
-        submit_cb_ioc = form.checkbox("🧐I want to extract IOCs (if present)",value=True)  
+        submit_cb_tweet = form.checkbox("📺Tweet MindMap",value=True)  
+        submit_cb_ioc = form.checkbox("🧐Extract IOCs (if present)",value=True)  
         submit_cb_ttps = form.checkbox("📊Extract adversary tactics, techniques, and procedures (TTPs)",value=True)  
         submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)  
-        submit_cb_ttps_timeline = form.checkbox("📈TTPs (Tactics, Techniques, and Procedures) graphic timeline",value=True) 
-        submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer",value=True) 
+        submit_cb_ttps_timeline = form.checkbox("📈TTPs graphic timeline",value=True) 
+        submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer *(The layer file is published on the [repository](https://github.com/format81/ti-mindmap-storage/) to be used by TI Mindmap.)*",value=True)
       
     with cols[0]:  
         submit_button = form.form_submit_button(":orange[**Generate**]")  
@@ -456,12 +471,16 @@ with tab1:
         
             if submit_cb_ioc:
                 with st.spinner("Extracting IOCs"):
-                    iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
-                    if isinstance(iocs_df, pd.DataFrame):
-                        st.write("### Extracted IOCs")
-                        st.dataframe(iocs_df)
+                    # Check if IOCs exist in session state  
+                    if st.session_state['iocs_df']:  
+                        iocs_df = st.session_state['iocs_df']  
                     else:
-                        st.error(iocs_df)
+                        iocs_df = ai_extract_iocs(text, client, service_selection, deployment_name)
+                        if isinstance(iocs_df, pd.DataFrame):
+                            st.write("### Extracted IOCs")
+                            st.dataframe(iocs_df)
+                        else:
+                            st.error(iocs_df)
 
             # Extracting TTPs and displaying them as a table
             if submit_cb_ttps:
@@ -485,31 +504,32 @@ with tab1:
 
             # Mermaid TTPs timeline
             if submit_cb_ttps_timeline:
-                #with st.spinner("Mermaid TTPs Timeline"):
-                mermaid_timeline = ai_ttp_graph_timeline(text, client, service_selection, deployment_name)
-                with st.expander("See LLM Generated Mermaid TTPs Timeline"):
-                    st.code(mermaid_timeline)
-                html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
-                mermaid_link2 = genPakoLink(mermaid_timeline)
-                st.link_button("Open code in Mermaid.live", mermaid_link2)
+                with st.spinner("Mermaid TTPs Timeline"):
+                    mermaid_timeline = ai_ttp_graph_timeline(text, client, service_selection, deployment_name)
+                    with st.expander("See LLM Generated Mermaid TTPs Timeline"):
+                        st.code(mermaid_timeline)
+                    html(mermaid_timeline_graph(mermaid_timeline), width=1500, height=1500)
+                    mermaid_link2 = genPakoLink(mermaid_timeline)
+                    st.link_button("Open code in Mermaid.live", mermaid_link2)
 
             #Mitre Navigator layer
             if submit_cb_navigator:
-                mitre_layer = ti_navigator.attack_layer(text, ttptable, client, service_selection, deployment_name)
-                # Check if mitre_layer is valid JSON
-                try:
-                    json.loads(mitre_layer)
-                except json.JSONDecodeError:
-                    st.error("The generated layer is not a valid JSON file.")
-                    if st.button("Click here to regenerate the layer"):
-                        mitre_layer = ti_navigator.attack_layer(text, client, service_selection, deployment_name)
-                        try:
-                            json.loads(mitre_layer)
-                        except json.JSONDecodeError:
-                            st.error("Failed to regenerate the layer. Please try again.")
-                            st.stop()  # Stop further execution
-                        else:
-                            st.success("Layer regenerated successfully.")
+                with st.spinner("MITRE Navigator Layer"):
+                    mitre_layer = ti_navigator.attack_layer(text, ttptable, client, service_selection, deployment_name)
+                    # Check if mitre_layer is valid JSON
+                    try:
+                        json.loads(mitre_layer)
+                    except json.JSONDecodeError:
+                        st.error("The generated layer is not a valid JSON file.")
+                        if st.button("Click here to regenerate the layer"):
+                            mitre_layer = ti_navigator.attack_layer(text, client, service_selection, deployment_name)
+                            try:
+                                json.loads(mitre_layer)
+                            except json.JSONDecodeError:
+                                st.error("Failed to regenerate the layer. Please try again.")
+                                st.stop()  # Stop further execution
+                            else:
+                                st.success("Layer regenerated successfully.")
                         
                 st.write("### MITRE ATT&CK Navigator layer json")
                 unique_id = str(uuid4())  # Create a unique ID  
@@ -524,7 +544,6 @@ with tab1:
 
                 # Upload the layer data to GitHub and get the raw URL
                 raw_url = upload_to_github(json.loads(mitre_layer))
-                #st.write(raw_url)
 
                 # Embed the Navigator in an iframe
                 navigator_iframe_url = f"https://mitre-attack.github.io/attack-navigator/#layerURL={raw_url}"
@@ -674,6 +693,7 @@ with tab4:
 with tab5:
     st.write("📋 STIX 2.1 generator - future release🚧")
     st.write("***Work in progress***")
+    st.write("We are working on an initial version of a STIX 2.1 report generator. We will release the functionality as soon as it is tested and operational. Stay tuned.")
 
 #TAB6
 with tab6:
