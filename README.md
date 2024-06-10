@@ -23,25 +23,29 @@ App: [APP](https://ti-mindmap-gpt.streamlit.app/)
 If you find TI MINDMAP useful, please consider starring the repository on GitHub. 
 
 ## Features
+- LLM supported: OpenAI, Azure OpenAI, MistralAI
 - Summary and Mindmap
 - Tweet Mindmap
-- IOCs extraction
+- IOCs extraction with VirusTotal IOCs enrichment
 - Extract adversary tactics, techniques, and procedures
 - Tactics, techniques and procedures by execution time
 - Tactics, techniques and procedures timeline
+- Embedded MITRE ATT&CK® Navigator
 - AI Chat on your TI Article
 - Mermaid live editor integration
 - PDF Report: Your Intelligence, Concisely Captured
-- LLM supported: OpenAI, Azure OpenAI, MistralAI
+- Write-up screenshot
 
 ## Know issues
+A known issue occurs when clicking “Generate PDF”, causing the Streamlit app (1.35 at the time of writing this post) to reload and resulting in the loss of output previously generated. This issue is currently being addressed by Streamlit and is scheduled for resolution in the roadmap between August and October 2024. A new functionality titled “Don’t rerun when clicking st.download_button” is planned to mitigate this issue.
 
 ## Blog posts
 1. [Introducing TI Mindmap GPT](https://medium.com/@antonio.formato/introducing-ti-mindmap-gpt-6f433f140488)
 2. [Enhancing Cyber Threat Intelligence with TI Mindmap GPT: Integration of Azure OpenAI and advanced features](https://medium.com/microsoftazure/enhancing-cyber-threat-intelligence-with-ti-mindmap-gpt-integration-of-azure-openai-and-advanced-94121ed66ac4)
-3. [What’s new in TI Mindmap | feb 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-feb-2024-14cf3b383833)
-4. [What’s new in TI Mindmap | mar 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-mar-2024-3712f38c6dd6)
-5. [What’s new in TI Mindmap | april 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-april-2024-29e1bfb88ae5)
+3. [What’s new in TI Mindmap | Feb 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-feb-2024-14cf3b383833)
+4. [What’s new in TI Mindmap | Mar 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-mar-2024-3712f38c6dd6)
+5. [What’s new in TI Mindmap | April 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-april-2024-29e1bfb88ae5)
+6. [What’s new in TI Mindmap | May 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-may-2024-3af9e8d90be8)
 
 ### Version 0.1
 
