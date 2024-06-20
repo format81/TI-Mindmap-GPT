@@ -335,16 +335,6 @@ with col2:
         st.session_state['ttptable'] = "" # Clear ttptable
         st.session_state['attackpath'] = "" # Clear attackpath
         st.session_state['iocs_df'] = "" # Clear iocs_df
-        
-        # Check if the content is related to cybersecurity
-        #relevance_check = check_content_relevance(text2, client, service_selection)
-        #if "not related to cybersecurity" in relevance_check:
-        #    st.write(f"**Content not related to cybersecurity**, It's about {relevance_check}")
-        #else:
-        #    # If related, proceed with summary and mindmap generation
-        #    input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text
-        #    with st.expander("See full article"):
-        #st.write(text)
 
 #Insert containers separated into tabs.
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - (future release🚧)**", "**🗃️ Conf file (future release🚧)**"])
@@ -443,8 +433,6 @@ with tab1:
                         st.session_state['summary'] = summary 
                     st.write("### LLM Generated Tweet")
                     user_input = st.text_area("Edit your tweet:", summary_tweet, height=100)
-                    #num_symbols = len(user_input)
-                    #st.write(summary_tweet)  
 
                     if submit_cb_summary == False:
                         with st.spinner("Generating Mermaid Tweet Code"):
@@ -592,13 +580,7 @@ with tab1:
 with tab3:
     st.header("📈 Pdf Report")
     form4 = st.form("Form to run pdf", clear_on_submit=False)
-    #default_url4 = ""
-    #url4 = form4.text_input("Enter your URL below:", default_url, placeholder="Paste any URL of your choice")
-    #Create columns for buttons and checkboxes
     cols4 = form4.columns(2)
-
-    #with cols4[0]:
-    #    submit_button4 = form4.form_submit_button("Generate PDF")
         
     with cols4[1]:
         submit_cb_summary4 = form4.checkbox("🗺️Add Summary and MindMap",value=True)

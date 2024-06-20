@@ -2,6 +2,7 @@ import os
 import json
 from uuid import uuid4
 from mistralai.models.chat_completion import ChatMessage
+from langsmith import traceable
 
 OPENAI_MODEL = "gpt-4-1106-preview"
 
@@ -127,6 +128,7 @@ prompt_response2 = """
 """
 
 #Function to provide ATT&CK Matrix for Enterprise layer json file
+@traceable
 def attack_layer(input_text, ttptable, client, service_selection, deployment_name=None):
   """
 Creates an ATT&CK Matrix for Enterprise layer in JSON format based on the provided input text and TTP table.

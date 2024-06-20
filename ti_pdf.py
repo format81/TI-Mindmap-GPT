@@ -103,7 +103,6 @@ def create_pdf_bytes(url, content, mermaid_code, attackpath=None):
 
     # Add content to the PDF
     flowables = []
-    #flowables.append(Image(download_image("https://ti-mindmap-gpt.streamlit.app/~/+/media/1c6ab33ef579e47f0f04779fb72cb18eef1dff0a7d3fc1d8026a2367.png")))# Page 1: Introduction
     flowables.append(Spacer(1, 0.1 * inch))  # Add some space after header
     flowables.append(Paragraph("TI MINDMAP", header1_style))
     flowables.append(Paragraph("TI MINDMAP, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more.", normal_style))

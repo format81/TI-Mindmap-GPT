@@ -13,8 +13,22 @@ import hashlib
 
 OPENAI_MODEL = "gpt-4-1106-preview"
 
-# Function to summarize the blog to create a short tweet, it work for both OpenAI and Azure OpenAI
+from langsmith import traceable
+import os
+# Accessing the secrets from the [default] section
+langchain_tracing_v2 = st.secrets["api_keys"]["LANGCHAIN_TRACING_V2"]
+langchain_endpoint = st.secrets["api_keys"]["LANGCHAIN_ENDPOINT"]
+langchain_api_key = st.secrets["api_keys"]["LANGCHAIN_API_KEY"]
+langchain_project = st.secrets["api_keys"]["LANGCHAIN_PROJECT"]
 
+# Setting the environment variables
+os.environ["LANGCHAIN_TRACING_V2"] = langchain_tracing_v2
+os.environ["LANGCHAIN_ENDPOINT"] = langchain_endpoint
+os.environ["LANGCHAIN_API_KEY"] = langchain_api_key
+os.environ["LANGCHAIN_PROJECT"] = langchain_project
+
+# Function to summarize the blog to create a short tweet, it work for both OpenAI and Azure OpenAI
+@traceable
 def ai_summarise_tweet(input_text, client, ai_service_provider, selected_language, deployment_name=None):
     """
     Summarizes a long text using a language model.
@@ -74,6 +88,7 @@ def ai_summarise_tweet(input_text, client, ai_service_provider, selected_languag
 
 
 # Function to summarize the blog, it work for both OpenAI and Azure OpenAI
+@traceable
 def ai_summarise(input_text, client, ai_service_provider, selected_language, deployment_name=None):
     """Summarizes a long text using a language model.
 
@@ -131,6 +146,7 @@ def ai_summarise(input_text, client, ai_service_provider, selected_language, dep
         return f"An error occurred while generating the summary: {e}"
 
 # Function to check if content is related to cybersecurity
+@traceable
 def ai_check_content_relevance(input_text, client, ai_service_provider, deployment_name=None):
     """
     Determines if the input text is related to cybersecurity.
@@ -180,6 +196,7 @@ def ai_check_content_relevance(input_text, client, ai_service_provider, deployme
         # Return a more informative error message
         return f"An error occurred while checking content relevance: {e}"
 
+@traceable
 def ai_run_models(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
     Runs the AI models to generate a mindmap.
@@ -265,6 +282,7 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
         # Return a more informative error message
         return f"An error occurred while generating the mindmap: {e}"
 
+@traceable
 def ai_run_models_tweet(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
     Creates a mindmap in the specified languages using the specified OpenAI API client.
@@ -328,6 +346,7 @@ def ai_run_models_tweet(input_text, client, selected_language, ai_service_provid
         return f"An error occurred while generating the mindmap: {e}"
     
 #functions to extract IOCs
+@traceable
 def create_dataframe_from_response(response):  
     """  
     Create a pandas DataFrame from the response of the AI API client.  
@@ -373,6 +392,7 @@ def update_virus_total_urls(ioc_dataframe):
             ioc_dataframe.at[index, "Virus Total URL"] = f"https://www.virustotal.com/gui/url/{sha256}"
     return ioc_dataframe
 
+@traceable
 def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=None):
     """  
     Extract Indicators of Compromise (IOCs) from unstructured text using OpenAI's API or MistralAI.  
@@ -435,6 +455,7 @@ def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=Non
 
 
 #Extract TTPs table
+@traceable
 def ai_ttp(text, client,service_selection, deployment_name=None):
     """
     This function is used to extract TTPs from a given text using the OpenAI API.
@@ -492,6 +513,7 @@ def ai_ttp(text, client,service_selection, deployment_name=None):
     except Exception as e:
         return f"Failed to extract TTPs: {e}"
 
+@traceable
 def ai_ttp_list(text, ttptable, client, service_selection, deployment_name=None):
     """
     This function takes as input a text, a table of TTPs, a client, a service selection, and a deployment name.
@@ -550,6 +572,7 @@ def ai_ttp_list(text, ttptable, client, service_selection, deployment_name=None)
     except Exception as e:
         return f"Failed to extract TTPs: {e}"
 
+@traceable
 def ai_ttp_graph_timeline(text, client, service_selection, deployment_name=None):
   """
     Generate a Mermaid.js timeline graph that illustrates the stages of a cyber attack based on the provided timeline text.
@@ -567,7 +590,7 @@ def ai_ttp_graph_timeline(text, client, service_selection, deployment_name=None)
   # Define the USER prompt
   user_prompt_ttp_graph_timeline = (
           f"Write a Mermaid.js timeline graph that illustrates the stages of a cyber attack whose TTPs timeline is as follows: {text} .\n"
-          f"As an example condider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. \n"
+          f"As an example consider the Lazarus Group's operation named Operation Blacksmith, whose Tactics, Techniques, and Procedures (TTPs) timeline is as follows: {ttps_timeline}, and related meirmad.js code is: {mermaid_timeline}. \n"
           "Use the Enterprise tactics names as defined by the MITRE ATT&CK framework are: Reconnaissance, Resource Development, Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Command and Control, Exfiltration, Impact"
           "Use the following guidalines to generate code: \n"
           "1. Use keyword timeline to start the graph definition, timeline must be first word in the output, don't use anything else. \n"
@@ -613,6 +636,7 @@ def ai_ttp_graph_timeline(text, client, service_selection, deployment_name=None)
   except Exception as e:
       return f"Failed to extract TTPs: {e}"
 
+@traceable
 def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embedding_deployment_name, openai_api_key, mistral_api_key):
     """
     Processes the input text using various NLP techniques and returns a FAISS knowledge base.
@@ -663,6 +687,7 @@ def ai_process_text(text, service_selection, azure_api_key, azure_endpoint, embe
         knowledge_base = FAISS.from_texts(chunks, embeddings)
     return knowledge_base
 
+@traceable
 def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azure_endpoint, deployment_name, openai_api_key, mistral_api_key):
     """
     Get a response from a knowledge base using a query.
