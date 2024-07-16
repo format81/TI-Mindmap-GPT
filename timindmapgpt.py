@@ -167,7 +167,7 @@ openai_api_key = ""
 
 st.set_page_config(
     page_title="TI Mindmap",
-    page_icon="logoTIMINDMAPGPT-small.png",
+    page_icon="docs & media/images/logoTIMINDMAPGPT-small.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -175,7 +175,7 @@ st.set_page_config(
 # Sidebar for OpenAI API Key
 
 with st.sidebar:
-    st.logo("logoTIMINDMAPGPT.png", link=None, icon_image=None)
+    st.logo("docs & media/images/logoTIMINDMAPGPT-small.png", link=None, icon_image=None)
     st.markdown(
         "Welcome to **TI MINDMAP**, an AI-powered tool designed to help producing Threat Intelligence summaries, Mindmap and IOCs extraction and more."
     )
@@ -306,7 +306,7 @@ elif service_selection == "MistralAI" and mistral_api_key:
 # Main UI
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    st.image("logoTIMINDMAPGPT.png", width=75)
+    st.image("docs & media/images/logoTIMINDMAPGPT-small.png", width=75)
     st.title("TI MINDMAP")
 with col2:
     form = st.form("Form to scrape", clear_on_submit=False)
