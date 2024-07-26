@@ -227,15 +227,7 @@ with st.sidebar:
         ("OpenAI", "Azure OpenAI", "MistralAI")
     )
     if service_selection == "Azure OpenAI":
-       
-#/////////////////     /////////////////     /////////////////     /////////////////     /////////////////     /////////////////     /////////////////       
-       
-        default_azure_api_key = "103f7546e09c4dd3bdde108fcba43525"
-        default_azure_endpoint = "https://openaicanadaplayground.openai.azure.com/"
-        default_deployment_name = "gpt4-af-demo"
-        default_embedding_deployment_name = "ada-af-demo"
-
-# /////////////////     /////////////////     /////////////////     /////////////////     /////////////////     /////////////////     /////////////////     
+          
         azure_api_key = st.sidebar.text_input(
             "Enter your Azure OpenAI API key:", 
             type="password",
