@@ -1,4 +1,5 @@
-import re
+import re, base64
+
 
 def mermaid_chart(mindmap_code):
     html_code = f"""
@@ -80,6 +81,44 @@ def mermaid_chart_png(mindmap_code):
     }}
     </script>
     <button onclick="downloadPNG()">Save Mindmap as PNG</button>
+    """
+    return html_code
+
+
+def markmap_to_html_with_png(markmap_code):
+    # Encode the markmap code to base64
+    encoded_markmap = base64.b64encode(markmap_code.encode()).decode()
+
+    html_code = f"""
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7/dist/index.min.js"></script>
+    <div id="markmap-container" style="width: 100%; height: 400px;"></div>
+    <button onclick="downloadSVG()">Save as SVG</button>
+    <script>
+    const markmapCode = atob("{encoded_markmap}");
+    
+    window.addEventListener('load', function() {{
+        setTimeout(function() {{
+            const {{Markmap}} = window.markmap;
+            const container = document.getElementById('markmap-container');
+            window.mm = Markmap.create(container, null, markmapCode);
+        }}, 200);
+    }});
+
+    function downloadSVG() {{
+        const svg = document.querySelector("#markmap-container svg");
+        const serializer = new XMLSerializer();
+        const source = serializer.serializeToString(svg);
+        const blob = new Blob([source], {{type: 'image/svg+xml;charset=utf-8'}});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'mindmap.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }}
+    </script>
     """
     return html_code
 

@@ -282,6 +282,82 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
         # Return a more informative error message
         return f"An error occurred while generating the mindmap: {e}"
 
+
+@traceable
+def ai_run_models_markmap(input_text, client, selected_language, ai_service_provider, deployment_name=None):
+    """
+    Runs the AI models to generate a markmap mindmap.
+
+    Args:
+        input_text (str): The input text to process.
+        client (OpenAI): The OpenAI API client.
+        selected_language (List[str]): The list of languages to use for processing.
+        deployment_name (str): The name of the deployment to use for Azure OpenAI.
+        service_selection (str): The name of the AI service to use (OpenAI or Azure OpenAI).
+
+    Returns:
+        str: The output of the AI models.
+
+    Raises:
+        ValueError: If the input parameters are invalid.
+
+    """
+     # Validate input parameters
+    if not input_text or not client or not ai_service_provider:
+        return "Invalid input parameters."
+    
+    # Combine the selected languages into a string, or default to "English" if none selected
+    language = ", ".join(selected_language) if selected_language else "English"
+    # Define the SYSTEM prompt with guidelines for creating the mindmap
+    system_prompt = (
+        f"You are tasked with creating an in-depth MarkMap mindmap in {language} language."
+        "This MarkMap-based mindmap aims to visually organize key findings and crucial highlights related to important Threat intelligece points from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
+        "1. Limit the number of primary nodes branching from the main node to up to four. These primary nodes should encapsulate the top main themes. Add detailed sub-nodes to elaborate on these themes. \n"
+        "2. Avoid using icons and emojis. \n "
+        "3. DO NOT insert spaces after the text of each line and DO NOT use parentheses or special characters for the names of the chart fields. \n "
+        "4. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
+        "5. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in MarkMap syntax. Instead, use dashes to enclose your text. \n"
+        "6. Double check that generated mindmap code is fully compliant with MArkMap syntax"
+        )
+    # Define the USER prompt
+    user_prompt = (
+        "Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
+    )
+    # Define the ASSISTANT prompt
+    assistant_prompt = (
+        "mindmap\nroot(YoroTrooper Threat Analysis)\n    (Origin and Target)\n      ::icon(fa fa-crosshairs)\n      (Likely originates from Kazakhstan)\n      (Mainly targets CIS countries)\n      (Attempts to make attacks appear from Azerbaijan)\n    (TTPs)\n      ::icon(fa fa-tactics)\n      (Uses VPN exit points in Azerbaijan)\n      (Spear phishing via credential-harvesting sites)\n      (Infiltrates websites and accounts of government officials)\n      (Subtly alters actions to blur origin)\n    (Language Proficiency)\n      ::icon(fa fa-language)\n      (Fluency in Kazakh and Russian)\n      (Translates Azerbaijani to Russian for phishing attacks)\n      (Uses Uzbek language in payloads)\n    (Malware Use)\n      ::icon(fa fa-bug)\n      (Evolved from commodity malware to custom-built malware)\n      (Uses Python, PowerShell, GoLang, and Rust platforms)\n    (Investigations and Countermeasures)\n      ::icon(fa fa-search)\n      (Ongoing investigations into potential state sponsorship)\n      (Protective countermeasures highlighted)\n      (IOCs listed on GitHub for public access)"
+    )
+    try:
+        # Determine the model based on the service provider
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
+        
+            # Make the API call for OpenAI or Azure OpenAI
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": input_text},
+                ],
+            )
+        
+            return response.choices[0].message.content
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="system", content=system_prompt),
+                    ChatMessage(role="user", content=input_text),
+                ],
+            )
+
+            return chat_response.choices[0].message.content
+    except Exception as e:
+        # Return a more informative error message
+        return f"An error occurred while generating the mindmap: {e}"
+
+
+
 @traceable
 def ai_run_models_tweet(input_text, client, selected_language, ai_service_provider, deployment_name=None):
     """
