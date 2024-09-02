@@ -11,7 +11,8 @@ from mistralai.models.chat_completion import ChatMessage
 import pandas as pd
 import hashlib
 
-OPENAI_MODEL = "gpt-4-1106-preview"
+#OPENAI_MODEL = "gpt-4-1106-preview"
+OPENAI_MODEL = "gpt-4o-2024-08-06"
 
 from langsmith import traceable
 import os
@@ -225,7 +226,7 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
     system_prompt = (
         f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. "
         f"This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
-        "1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code. \n"
+        "1. Avoid using hyphens and nested parentheses in the text, as they cause errors in the Mermaid.js code. Instead, use dashes or rewrite the text to avoid nesting \n"
         "2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes. \n"
         "3. Incorporate icons where suitable to enhance readability and comprehension. \n"
         "4. You MUST use single parentheses around each node to give them a rounded shape. \n"
@@ -239,7 +240,8 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
         "12. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
         "13. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n"
         "14. Instead of using the following approach (Indicators of compromise (IOC) provided), use this: (Indicators of compromise - IOC - provided). \n"
-        "15. DO NOT close line with . but use just )"
+        "15. If there are indicators such as domains or IPs, do not use square brackets to delimit the punctuation. For example, report the domain weinsteinfrog[.]com as weinsteinfrog.com or the IP 123[.]234[.]12[.]89 rewrite it as 123.234.12.89. \n"
+        "16. DO NOT close line with . but use just )"
     )
     # Define the USER prompt
     user_prompt = (
@@ -311,13 +313,15 @@ def ai_run_models_markmap(input_text, client, selected_language, ai_service_prov
     # Define the SYSTEM prompt with guidelines for creating the mindmap
     system_prompt = (
         f"You are tasked with creating an in-depth MarkMap mindmap in {language} language."
-        "This MarkMap-based mindmap aims to visually organize key findings and crucial highlights related to important Threat intelligece points from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
-        "1. Limit the number of primary nodes branching from the main node to up to four. These primary nodes should encapsulate the top main themes. Add detailed sub-nodes to elaborate on these themes. \n"
-        "2. Avoid using icons and emojis. \n "
-        "3. DO NOT insert spaces after the text of each line and DO NOT use parentheses or special characters for the names of the chart fields. \n "
-        "4. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
-        "5. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in MarkMap syntax. Instead, use dashes to enclose your text. \n"
-        "6. Double check that generated mindmap code is fully compliant with MArkMap syntax"
+        "This MarkMap-based mindmap aims to visually organize key findings and crucial highlights related to important Threat Intelligence points from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
+        "1. Limit the number of primary nodes branching from the main node to up to four. These primary nodes should encapsulate the top main themes. \n"
+        "2. Add sub-nodes to elaborate on these themes, these secondary nodes should provide context titles. Limit the number of secondary nodes to up to four\n"
+        "3. Sub-nodes will provide very concise and relevant information for the threat analyst reviewing the mindmap, ensuring the content remains brief and straight to the point. \n"
+        "4. Avoid using icons and emojis. \n "
+        "5. DO NOT insert spaces after the text of each line and DO NOT use parentheses or special characters for the names of the chart fields. \n "
+        "6. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
+        "7. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in MarkMap syntax. Instead, use dashes to enclose your text. \n"
+        "8. Double check that generated mindmap code is fully compliant with MarkMap syntax"
         )
     # Define the USER prompt
     user_prompt = (

@@ -418,7 +418,7 @@ if st.session_state.show_tabs:
             submit_cb_ttps_by_time = form.checkbox("🕰️TTPs ordered by execution time",value=True)  
             submit_cb_ttps_timeline = form.checkbox("📈TTPs graphic timeline",value=True) 
             submit_cb_navigator = form.checkbox("📈MITRE Navigator Layer *(The layer file is published on the [repository](https://github.com/format81/ti-mindmap-storage/) to be used by TI Mindmap.)*",value=True)
-            submit_cb_5whats = form.checkbox("🗺️5 What",value=True) 
+            submit_cb_5whats = form.checkbox("🗺️Threat Scope Report - 5 What",value=True) 
 
         with cols[0]:  
             submit_button = form.form_submit_button(":orange[**Generate**]")  
@@ -464,7 +464,7 @@ if st.session_state.show_tabs:
                         st.write(summary)
                         st.write(st.session_state['mindmap_code'])
     
-                        with st.spinner("Generating Mermaid Code"):  
+                        with st.spinner("Generating Mindmap Code"):  
                             # Check if mindmap_code exists in session state  
                             if st.session_state['mindmap_code']:  
                                 mindmap_code = st.session_state['mindmap_code']  
@@ -726,7 +726,7 @@ if st.session_state.show_tabs:
                         st.write("### OpenAI Generated Summary")  
                         st.write(summary)   
     
-                        with st.spinner("Generating Mermaid Code"):  
+                        with st.spinner("Generating Mindmap Code"):  
                             # Check if mindmap_code exists in session state  
                             if st.session_state['mindmap_code']:  
                                 mindmap_code = st.session_state['mindmap_code']  
