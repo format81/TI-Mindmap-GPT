@@ -227,7 +227,8 @@ with st.sidebar:
         ("OpenAI", "Azure OpenAI", "MistralAI")
     )
     if service_selection == "Azure OpenAI":
-          
+       
+   
         azure_api_key = st.sidebar.text_input(
             "Enter your Azure OpenAI API key:", 
             type="password",
