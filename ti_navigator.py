@@ -4,7 +4,8 @@ from uuid import uuid4
 from mistralai.models.chat_completion import ChatMessage
 from langsmith import traceable
 
-OPENAI_MODEL = "gpt-4-1106-preview"
+#OPENAI_MODEL = "gpt-4-1106-preview"
+OPENAI_MODEL = "gpt-4o-2024-08-06"
 
 prompt_table2 = """
 | Technique                                | Technique ID | Tactic           | Comment                                                                                                      |
