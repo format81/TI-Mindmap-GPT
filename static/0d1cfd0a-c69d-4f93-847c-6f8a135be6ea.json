@@ -1,0 +1,125 @@
+{
+  "name": "Enterprise TTPs",
+  "versions": {
+    "attack": "14",
+    "navigator": "4.9.1",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "Enterprise layer",
+  "techniques": [
+    {
+      "techniqueID": "T1558.003",
+      "color": "",
+      "comment": "The threat actor used Rubeus to conduct a Kerberoasting attack",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1558.004",
+      "color": "",
+      "comment": "Rubeus was utilized for AS-REP Roasting on the beachhead host",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003.001",
+      "color": "",
+      "comment": "Access to LSASS memory for obtaining valid credentials was observed",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1082",
+      "color": "",
+      "comment": "The threat actor executed systeminfo to gather details about the local system",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1069.002",
+      "color": "",
+      "comment": "The threat actor used Windows utilities, including systeminfo and nltest, to perform enumeration on the system and environment",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1210",
+      "color": "",
+      "comment": "Observations of pass-the-hash attacks suggest lateral movement took place. SMB Admin shares and RDP were also used for lateral movement",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1021.002",
+      "color": "",
+      "comment": "The attacker used SMB Admin $ shares to move beacons laterally",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1021.001",
+      "color": "",
+      "comment": "RDP was used for further lateral movement",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1569.002",
+      "color": "",
+      "comment": "Cobalt Strike was used for its capabilities that mimic Sysinternals PsExec for remote process execution",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1112",
+      "color": "",
+      "comment": "The threat actor modified the registry to enable RDP access to a file server",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1071",
+      "color": "",
+      "comment": "Cobalt Strike and SystemBC were used for command and control",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1560",
+      "color": "",
+      "comment": "The actor used 7z to archive data output from running the Get-DataInfo.ps1 PowerShell script",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1490",
+      "color": "",
+      "comment": "Upon execution, the ransomware used vssadmin to delete shadow copies before encrypting the hosts ",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6666", "#ffe766", "#8ec843"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [],
+  "metadata": [],
+  "showTacticRowBackground": false,
+  "tacticRowBackground": "#dddddd"
+}

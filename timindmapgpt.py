@@ -227,29 +227,29 @@ with st.sidebar:
         ("OpenAI", "Azure OpenAI", "MistralAI")
     )
     if service_selection == "Azure OpenAI":
-       
+
    
         azure_api_key = st.sidebar.text_input(
             "Enter your Azure OpenAI API key:", 
             type="password",
-            #value=default_azure_api_key,
+            value=default_azure_api_key,
             help="You can find your Azure OpenAI API key on the [Azure portal](https://portal.azure.com/).",
             )
         
         azure_endpoint = st.sidebar.text_input(
             "Enter your Azure OpenAI endpoint:",
-            #value=default_azure_endpoint,
+            value=default_azure_endpoint,
             help="Example: https://YOUR_RESOURCE_NAME.openai.azure.com/",
             )
         deployment_name = st.sidebar.text_input(
             "Enter your Azure OpenAI deployment name:",
-            #value=default_deployment_name,
+            value=default_deployment_name,
             help="The deployment name you chose when you deployed the model.",
             )
         embedding_deployment_name = st.sidebar.text_input(
             "(Optional if you want to use chatbot) Enter your Text Embedding Azure OpenAI deployment name:",
             help="The deployment name you chose when you deployed text-embedding-ada-002 model.",
-            #value=default_embedding_deployment_name,
+            value=default_embedding_deployment_name,
             )
         st.markdown(
             "Data stays active solely for the duration of the user's session and is erased when the page is refreshed."
@@ -509,7 +509,7 @@ if st.session_state.show_tabs:
                                 #- Each new line represents a new node in the mind map
                                 #""")
 
-                        with st.expander("See OpenAI Generated " + selected_mindmap_option + " Code"):  
+                        with st.expander("See LLM Generated " + selected_mindmap_option + " Code"):  
                             st.code(mindmap_code) 
     
                 mermaid_link1 = genPakoLink(mindmap_code)    
