@@ -232,7 +232,7 @@ with st.sidebar:
         azure_api_key = st.sidebar.text_input(
             "Enter your Azure OpenAI API key:", 
             type="password",
-            value=default_azure_api_key,
+            #value=default_azure_api_key,
             help="You can find your Azure OpenAI API key on the [Azure portal](https://portal.azure.com/).",
             )
         
