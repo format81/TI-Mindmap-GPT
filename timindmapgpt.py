@@ -238,18 +238,18 @@ with st.sidebar:
         
         azure_endpoint = st.sidebar.text_input(
             "Enter your Azure OpenAI endpoint:",
-            value=default_azure_endpoint,
+            #value=default_azure_endpoint,
             help="Example: https://YOUR_RESOURCE_NAME.openai.azure.com/",
             )
         deployment_name = st.sidebar.text_input(
             "Enter your Azure OpenAI deployment name:",
-            value=default_deployment_name,
+            #value=default_deployment_name,
             help="The deployment name you chose when you deployed the model.",
             )
         embedding_deployment_name = st.sidebar.text_input(
             "(Optional if you want to use chatbot) Enter your Text Embedding Azure OpenAI deployment name:",
             help="The deployment name you chose when you deployed text-embedding-ada-002 model.",
-            value=default_embedding_deployment_name,
+            #value=default_embedding_deployment_name,
             )
         st.markdown(
             "Data stays active solely for the duration of the user's session and is erased when the page is refreshed."
