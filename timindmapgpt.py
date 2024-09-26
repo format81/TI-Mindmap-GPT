@@ -356,7 +356,7 @@ with col2:
     st.title(" ")
 with col2:
     form = st.form("Form to scrape", clear_on_submit=False)
-    default_url = "https://www.splunk.com/en_us/blog/security/splunk-security-content-for-impact-assessment-of-crowdstrike-windows-outage.html"
+    default_url = ""
     url = form.text_input("", default_url, placeholder="Paste any URL of your choice")
     
     # Center the button using custom HTML/CSS
