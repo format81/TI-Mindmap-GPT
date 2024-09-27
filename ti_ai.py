@@ -11,7 +11,8 @@ from mistralai.models.chat_completion import ChatMessage
 import pandas as pd
 import hashlib
 
-OPENAI_MODEL = "gpt-4-1106-preview"
+#OPENAI_MODEL = "gpt-4-1106-preview"
+OPENAI_MODEL = "gpt-4o-2024-08-06"
 
 from langsmith import traceable
 import os
@@ -225,7 +226,7 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
     system_prompt = (
         f"You are tasked with creating an in-depth mindmap in {language} language designed specifically for a threat analyst. "
         f"This mindmap aims to visually organize key findings and crucial highlights from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
-        "1. Avoid using hyphens in the text, as they cause errors in the Mermaid.js code. \n"
+        "1. Avoid using hyphens and nested parentheses in the text, as they cause errors in the Mermaid.js code. Instead, use dashes or rewrite the text to avoid nesting \n"
         "2. Limit the number of primary nodes branching from the main node to four. These primary nodes should encapsulate the top four main themes. Add detailed sub-nodes to elaborate on these themes. \n"
         "3. Incorporate icons where suitable to enhance readability and comprehension. \n"
         "4. You MUST use single parentheses around each node to give them a rounded shape. \n"
@@ -239,7 +240,8 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
         "12. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
         "13. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in Mermaid syntax. Instead, use dashes to enclose your text. \n"
         "14. Instead of using the following approach (Indicators of compromise (IOC) provided), use this: (Indicators of compromise - IOC - provided). \n"
-        "15. DO NOT close line with . but use just )"
+        "15. If there are indicators such as domains or IPs, do not use square brackets to delimit the punctuation. For example, report the domain weinsteinfrog[.]com as weinsteinfrog.com or the IP 123[.]234[.]12[.]89 rewrite it as 123.234.12.89. \n"
+        "16. DO NOT close line with . but use just )"
     )
     # Define the USER prompt
     user_prompt = (
@@ -281,6 +283,106 @@ def ai_run_models(input_text, client, selected_language, ai_service_provider, de
     except Exception as e:
         # Return a more informative error message
         return f"An error occurred while generating the mindmap: {e}"
+
+
+@traceable
+def ai_run_models_markmap(input_text, client, selected_language, ai_service_provider, deployment_name=None):
+    """
+    Runs the AI models to generate a markmap mindmap.
+
+    Args:
+        input_text (str): The input text to process.
+        client (OpenAI): The OpenAI API client.
+        selected_language (List[str]): The list of languages to use for processing.
+        deployment_name (str): The name of the deployment to use for Azure OpenAI.
+        service_selection (str): The name of the AI service to use (OpenAI or Azure OpenAI).
+
+    Returns:
+        str: The output of the AI models.
+
+    Raises:
+        ValueError: If the input parameters are invalid.
+
+    """
+     # Validate input parameters
+    if not input_text or not client or not ai_service_provider:
+        return "Invalid input parameters."
+    
+    # Combine the selected languages into a string, or default to "English" if none selected
+    language = ", ".join(selected_language) if selected_language else "English"
+    # Define the SYSTEM prompt with guidelines for creating the mindmap
+    system_prompt = (
+        f"You are tasked with creating an in-depth MarkMap mindmap in {language} language."
+        "This MarkMap-based mindmap aims to visually organize key findings and crucial highlights related to important Threat Intelligence points from the text. Please adhere to the following guidelines in English but apply the approach to {language}: \n"
+        "1. Limit the number of primary nodes branching from the main node to up to four. These primary nodes should encapsulate the top main themes. \n"
+        "2. Add sub-nodes to elaborate on these themes, these secondary nodes should provide context titles. Limit the number of secondary nodes to up to four\n"
+        "3. Sub-nodes will provide very concise and relevant information for the threat analyst reviewing the mindmap, ensuring the content remains brief and straight to the point. \n"
+        "4. Avoid using icons and emojis. \n "
+        "5. DO NOT insert spaces after the text of each line and DO NOT use parentheses or special characters for the names of the chart fields. \n "
+        "6. Special characters need to be escaped or avoided, like brackets in domain. Example: not use mail[.]kz but use mail.kz. \n"
+        "7. When encapsulating text within a line, avoid using additional parentheses as they can introduce ambiguity in MarkMap syntax. Instead, use dashes to enclose your text. \n"
+        "8. Double check that generated mindmap code is fully compliant with MarkMap syntax. \n"
+        "9. Produce the MarkMap code without spaces between the lines. \n"
+        "10. DO NOT write ``` as the first and last line. Start directly with the code. "
+        )
+    # Define the USER prompt
+    user_prompt = (
+        "Title:  Threat Report Summary: Kazakhstan-associated YoroTrooper disguises origin of attacks as Azerbaijan\n\nThreat actors known as YoroTrooper, presumably originating from Kazakhstan, have been conducting cyber espionage activities, largely focusing on Commonwealth of Independent States (CIS) countries. These actors mask their origins, making their attacks appear to come from Azerbaijan. Several tactics, techniques, and procedures (TTPs) were used, including using VPN exit points in Azerbaijan and spear phishing via credential-harvesting sites. They have infiltrated websites and accounts of several government officials between May and August 2023.\n\nThe information supporting that YoroTrooper is likely based in Kazakhstan includes the use of Kazakh currency, fluency in Kazakh and Russian, and the limited targeting of Kazakh entities. Interestingly, YoroTrooper has shown a defensive interest in the website of the Kazakhstani state-owned email service (mail[.]kz), taking precautions to ensure it is not exposed to potential security vulnerabilities. The only Kazakh institution targeted was the government’s Anti-Corruption Agency.\n\nYoroTrooper subtly alters its actions to blur its origin, using various tactics to point to Azerbaijan. In addition to routinely rerouting its operations via Azerbaijan, the threat actors frequently translate Azerbaijani to Russian and draft lures in Russian before converting them to Azerbaijani for their phishing attacks. The addition of Uzbek language in their payloads since June 2023 poses another layer of obfuscation, but is likely a demonstration of the actors' multilingual abilities rather than an attempt to mask as an Uzbek adversary.\n\nIn terms of malware use, YoroTrooper has evolved from relying heavily on commodity malware to also using custom-built malware across platforms such as Python, PowerShell, GoLang, and Rust. There is evidence that this threat actor continues to learn and adapt. There has been successful intrusion into several CIS government entities, indicating possible state-backing or state interests serving as motivation.\n\nInvestigations into YoroTrooper are ongoing to determine the extent of potential state sponsorship and additionally whether there is another motivator or objective, such as financial gain through the sale of state-held information. Protective countermeasures have been highlighted. Various IOCs are listed on GitHub for public access."
+    )
+
+    # Define the ASSISTANT prompt
+    assistant_prompt = (
+        "# Threat Intelligence\n"
+        "- UNC2970 Backdoor Deployment\n"
+        "  - Targets\n"
+        "    - Victims in US critical infrastructure verticals\n"
+        "    - Job openings exploited as entry point\n"
+        "    - Senior-level targets aimed for sensitive info\n"
+        "  - Phishing Tactic\n"
+        "    - Email and WhatsApp used for communication\n"
+        "    - Malicious archive shared\n"
+        "  - Trojanized PDF reader - SumatraPDF\n"
+        "    - Role in Deployment\n"
+        "      - Used to deliver MISTPEN backdoor via BURNBOOK launcher\n"
+        "      - Modified older open-source version of SumatraPDF\n"
+        "    - No inherent vulnerability within SumatraPDF itself\n"
+        "  - Infection Chain\n"
+        "    - Encrypted PDF decoded by trojanized SumatraPDF\n"
+        "    - MISTPEN backdoor loaded into memory space and executed"
+    )
+
+    try:
+        # Determine the model based on the service provider
+        if ai_service_provider == "OpenAI" or ai_service_provider == "Azure OpenAI":
+            model = OPENAI_MODEL if ai_service_provider == "OpenAI" else deployment_name
+        
+            # Make the API call for OpenAI or Azure OpenAI
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "assistant", "content": assistant_prompt},
+                    {"role": "user", "content": input_text},
+                ],
+            )
+        
+            return response.choices[0].message.content
+        elif ai_service_provider == "MistralAI":
+            chat_response = client.chat(
+                model="mistral-large-latest",
+                messages=[
+                    ChatMessage(role="system", content=system_prompt),
+                    ChatMessage(role="user", content=input_text),
+                    ChatMessage(role="user", content=input_text),
+                ],
+            )
+
+            return chat_response.choices[0].message.content
+    except Exception as e:
+        # Return a more informative error message
+        return f"An error occurred while generating the mindmap: {e}"
+
+
 
 @traceable
 def ai_run_models_tweet(input_text, client, selected_language, ai_service_provider, deployment_name=None):
