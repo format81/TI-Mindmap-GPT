@@ -178,7 +178,7 @@ openai_api_key = ""
 
 st.set_page_config(
     page_title="TI Mindmap",
-    page_icon="logoTIMINDMAPGPT-small.png",
+    page_icon="docs & media/images/logoTIMINDMAPGPT-small.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
