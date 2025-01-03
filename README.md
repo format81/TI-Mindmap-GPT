@@ -24,7 +24,8 @@ If you find TI MINDMAP useful, please consider starring the repository on GitHub
 
 ## Features
 - LLM supported: OpenAI, Azure OpenAI, MistralAI
-- Summary and Mindmap
+- Summary in markdown format 
+- Mindmap in Mermaid.js or MarkMap
 - Tweet Mindmap
 - IOCs extraction with VirusTotal IOCs enrichment
 - Extract adversary tactics, techniques, and procedures
@@ -35,6 +36,7 @@ If you find TI MINDMAP useful, please consider starring the repository on GitHub
 - Mermaid live editor integration
 - PDF Report: Your Intelligence, Concisely Captured
 - Write-up screenshot
+- STIX 2.1 report generator (The dedicated project [GenAI-STIX2.1-Generator](https://github.com/format81/GenAI-STIX2.1-Generator/) has been merged.)
 
 ## Know issues
 A known issue occurs when clicking “Generate PDF”, causing the Streamlit app (1.35 at the time of writing this post) to reload and resulting in the loss of output previously generated. This issue is currently being addressed by Streamlit and is scheduled for resolution in the roadmap between August and October 2024. A new functionality titled “Don’t rerun when clicking st.download_button” is planned to mitigate this issue.
@@ -46,6 +48,7 @@ A known issue occurs when clicking “Generate PDF”, causing the Streamlit app
 4. [What’s new in TI Mindmap | Mar 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-mar-2024-3712f38c6dd6)
 5. [What’s new in TI Mindmap | April 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-april-2024-29e1bfb88ae5)
 6. [What’s new in TI Mindmap | May 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-may-2024-3af9e8d90be8)
+7. [What’s new in TI Mindmap | Sep 2024](https://medium.com/@antonio.formato/whats-new-in-ti-mindmap-sep-2024-1f3ce3197789)
 
 ### Version 0.1
 
@@ -53,7 +56,15 @@ Initial release of the application.
 
 ## Contributing
 
-The project is open to external contributions. Pull requests are welcome.
+The project is open to external contributions. Pull requests are welcome. 
+Here's how you can help:
+
+- **Testing and Feedback**: Try the tool and share your insights to improve its performance and usability.
+- **Improving Prompts**: Help refine the AI prompts for better extraction and accuracy of unstructured cyber threat intelligence data.
+- **Extending Functionality**: Build additional features, or improve existing workflows.
+- **Open Discussions**: Join the conversation to explore innovative use cases and share your ideas.
+
+Your contributions will help make this project more robust and impactful. Thank you for your support!
 
 ## License
 

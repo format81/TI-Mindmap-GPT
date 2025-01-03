@@ -1,0 +1,118 @@
+```json
+{
+  "name": "Lazarus Group TTPs in Operation Blacksmith",
+  "versions": {
+    "attack": "14",
+    "navigator": "4.9.1",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "TTPs identified in Lazarus Group's Operation Blacksmith campaign.",
+  "filters": {
+    "platforms": ["windows"]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": false,
+    "showName": true,
+    "showAggregateScores": false,
+    "countUnscored": false,
+    "expandedSubtechniques": "none"
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1190",
+      "tactic": "initial-access",
+      "color": "",
+      "comment": "Exploitation of CVE-2021-44228 (Log4Shell) for initial access.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1082",
+      "tactic": "discovery",
+      "color": "",
+      "comment": "Executing commands like whoami, systeminfo, and netstat for system information discovery.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003/005",
+      "tactic": "credential-access",
+      "color": "",
+      "comment": "Use of MimiKatz and ProcDump for OS credential dumping.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1136",
+      "tactic": "persistence",
+      "color": "",
+      "comment": "Creation of additional user account with administrative privileges for persistence.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1543",
+      "tactic": "persistence",
+      "color": "",
+      "comment": "Use of NineRAT for persistence by creating services with BAT scripts.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059",
+      "tactic": "execution",
+      "color": "",
+      "comment": "Executing PowerShell commands and scripts via BottomLoader.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1140",
+      "tactic": "defense-evasion",
+      "color": "",
+      "comment": "NineRAT's dropper deletes itself after deploying nsIookup.exe for persistence.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1102",
+      "tactic": "command-and-control",
+      "color": "",
+      "comment": "Use of Telegram channels and bots for command and control.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6666", "#ffe766", "#8ec843"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [],
+  "metadata": [],
+  "links": [],
+  "showTacticRowBackground": false,
+  "tacticRowBackground": "#dddddd"
+}
+```

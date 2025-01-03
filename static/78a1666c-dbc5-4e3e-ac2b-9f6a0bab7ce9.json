@@ -1,0 +1,138 @@
+```json
+{
+  "name": "Operation Blacksmith TTPs",
+  "versions": {
+    "attack": "14",
+    "navigator": "4.9.1",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "TTPs identified in Lazarus Group's Operation Blacksmith using novel DLang-based malware.",
+  "filters": {
+    "platforms": ["windows"]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": false,
+    "showName": true,
+    "showAggregateScores": false,
+    "countUnscored": false,
+    "expandedSubtechniques": "none"
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1219",
+      "tactic": "command-and-control",
+      "color": "",
+      "comment": "Use of NineRAT, a novel DLang-based RAT utilizing Telegram for C2.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1082",
+      "tactic": "discovery",
+      "color": "",
+      "comment": "Numerous mentions of commands like 'whoami', 'ipconfig', 'ver' in NineRAT and DLRAT for system info gathering.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1518",
+      "tactic": "discovery",
+      "color": "",
+      "comment": "Commands like 'WMIC' for antivirus product discovery.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003/005",
+      "tactic": "credential-access",
+      "color": "",
+      "comment": "Using tools like Procdump and Mimikatz to dump credentials.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1190",
+      "tactic": "initial-access",
+      "color": "",
+      "comment": "Exploitation of CVE-2021-44228 (Log4Shell) for initial access.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1050",
+      "tactic": "persistence",
+      "color": "",
+      "comment": "Use of service creation to maintain persistence for the first component of NineRAT.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1105",
+      "tactic": "command-and-control",
+      "color": "",
+      "comment": "Use of Telegram as a communication channel to evade detection.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1136",
+      "tactic": "credential-access",
+      "color": "",
+      "comment": "Creation of unauthorized user accounts for continued access and credential access.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1112",
+      "tactic": "defense-evasion",
+      "color": "",
+      "comment": "Registry modification for credential dumping purposes.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1005",
+      "tactic": "collection",
+      "color": "",
+      "comment": "Using command like 'cmd.exe /C whoami' to collect system information.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6666", "#ffe766", "#8ec843"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [],
+  "metadata": [],
+  "links": [],
+  "showTacticRowBackground": false,
+  "tacticRowBackground": "#dddddd"
+}
+```

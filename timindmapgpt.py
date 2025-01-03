@@ -16,8 +16,11 @@ import ti_pdf
 import ti_mermaid
 import ti_navigator
 import ti_5whats
+import ti_stix
+import markdownify
 from mistralai.client import MistralClient
 from github import Github
+from markdownify import markdownify
 
 from streamlit_markmap import markmap
 import streamlit.components.v1 as components
@@ -31,7 +34,7 @@ REPO_NAME = "format81/ti-mindmap-storage"
 if not os.path.exists('./static'):  
     os.makedirs('./static')
 
-def scrape_text(url):
+def scrape_text2(url):
     """
     Scrapes the text content from a given URL.
 
@@ -66,6 +69,44 @@ def scrape_text(url):
     else:
         return "Failed to scrape the website"
 
+def scrape_text(url):
+    """
+    Scrapes the text content from a given URL and converts it to Markdown.
+
+    This function sends a GET request to the specified URL and parses the HTML content
+    to extract the text. It uses BeautifulSoup to parse the HTML and `markdownify`
+    to convert the HTML content into Markdown format. If the GET request is successful
+    (HTTP status code 200), the function returns the extracted Markdown content.
+
+    Parameters:
+    url (str): The URL of the webpage from which to scrape the text.
+
+    Returns:
+    str: The extracted text content in Markdown format from the webpage.
+    """
+    # Add user-agent to avoid issues when scraping most websites
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise HTTPError for bad responses
+
+        # Parse the HTML content
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Extract main content or fallback to the entire body
+        main_content = soup.find('main') or soup.body
+
+        # Convert HTML to Markdown
+        text = markdownify(str(main_content))
+
+        return text
+
+    except requests.exceptions.RequestException as e:
+        return f"Failed to scrape the website: {e}"
 
 def remove_first_non_empty_line_if_mermaid(mermaid_code):
     """
@@ -396,15 +437,20 @@ with col2:
         st.session_state['ttptable'] = "" # Clear ttptable
         st.session_state['attackpath'] = "" # Clear attackpath
         st.session_state['iocs_df'] = "" # Clear iocs_df
-        st.session_state['5whats'] = ""
+        st.session_state['5whats'] = "" # Clear 5whats
+        st.session_state['stix'] = "" # Clear stix
+        st.session_state['stix_sdo'] = "" # Clear stix sdo
+        st.session_state['stix_sco'] = "" # Clear stix sco
+        st.session_state['stix_sro'] = "" # Clear stix sro
 
 
 #Insert containers separated into tabs.
 if st.session_state.show_tabs:
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - (future release🚧)**", "**🗃️ Conf file (future release🚧)**"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["🗃 **Main**", "💾 **AI Chat with your data**", "**📈 Pdf Report**", "**📷 Screenshot**", "**📋STIX 2.1 generator - (beta🚧)**", "**📈Writeup in MarkDown**", "**🗃️ Conf file (future release🚧)**"])
     mindmap_code = ""
 
     # Form for URL input
+    #TAB1
     with tab1:  
         form = st.form("Form to run", clear_on_submit=True)  
     
@@ -443,7 +489,7 @@ if st.session_state.show_tabs:
                     input_text = "Generate a Mermaid.js MindMap only using the text below:\n" + text
                 else:
                     input_text = "Generate a MarkMap.js MindMap only using the text below:\n" + text
-                with st.expander("See full article"):
+                with st.expander("See full article in MarkDown format"):
                     st.write(text)
 
                 # Generate Summary and Mindmap
@@ -496,23 +542,9 @@ if st.session_state.show_tabs:
                             else:
                                 mm = markmap(mindmap_code, height=600)
 
-                                # Create mind map button
-                                #if st.button("Customize Mind Map"):
-                                #    markmap(mindmap_code)
-
-                                # Instructions
-                                #st.markdown("""
-                                ### Instructions:
-                                #- Use '#' for the main topic
-                                #- Use '##' for subtopics
-                                #- Use '###' for further details, and so on
-                                #- Each new line represents a new node in the mind map
-                                #""")
-
                         with st.expander("See LLM Generated " + selected_mindmap_option + " Code"):  
                             st.code(mindmap_code) 
-    
-                mermaid_link1 = genPakoLink(mindmap_code)    
+                mermaid_link1 = genPakoLink(mindmap_code)
                 st.link_button("Open code in Mermaid.live", mermaid_link1)  
 
                 #Generate tweet
@@ -785,11 +817,162 @@ if st.session_state.show_tabs:
         
     #TAB5
     with tab5:
-        st.write("📋 STIX 2.1 generator - future release🚧")
-        st.write("***Work in progress***")
-        st.write("We are working on an initial version of a STIX 2.1 report generator. We will release the functionality as soon as it is tested and operational. Stay tuned.")
+        st.header("📈 STIX2.1 Threat Report")
+        form5 = st.form("Form to stix", clear_on_submit=False)
+        cols5 = form5.columns(2)
+            
+        with cols5[1]:
+            submit_stix = form5.checkbox("🗺️Generate STIX 2.1 bundle", value=True)
+            
+        with cols5[0]:
+            submit_button5 = form5.form_submit_button(":orange[**Generate STIX2.1**]")
+
+        if submit_button5 and client:  
+            text = st.session_state['text']  # Use the text stored in session state
+
+            is_valid = False
+
+            while not is_valid:
+                try:
+                    # Generate STIX SDO from the LLM
+                    stix_sdo = ti_stix.sdo_stix(text, client, service_selection, deployment_name)
+
+                    # Parse STIX SDO string to a Python list
+                    stix_data = json.loads(stix_sdo)
+                    if not isinstance(stix_data, list):
+                        raise ValueError("Parsed STIX SDO must be a list of dictionaries.")
+
+                    # Add UUIDs to IDs
+                    stix_data = ti_stix.add_uuid_to_ids(stix_data)
+
+                    # Validate STIX objects
+                    is_valid, invalid_objects = ti_stix.validate_stix_objects(stix_data)
+
+                    if not is_valid:
+                        print("Validation failed. Requesting correction from LLM...")
+                        stix_sdo = ti_stix.correct_invalid_stix(text, invalid_objects, stix_sdo)
+                    else:
+                        print("Validation successful. All objects are valid.")
+
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing STIX SDO: {e}")
+                    stix_sdo = ti_stix.correct_invalid_stix(text, [], stix_sdo)
+                except ValueError as e:
+                    print(e)
+                    stix_sdo = ti_stix.correct_invalid_stix(text, [], stix_sdo)
+
+            # Final validated STIX SDO as JSON string
+            stix_sdo = json.dumps(stix_data, indent=4)
+            st.session_state['stix_sdo'] = stix_sdo
+            with st.expander("See SDO Json"):  
+                st.code(stix_sdo)
+                
+            # Now handle STIX SCO generation
+            is_valid_sco = False
+            while not is_valid_sco:
+                try:
+                    # Generate STIX SCO from the LLM
+                    stix_sco = ti_stix.sco_stix(text, client, service_selection, deployment_name)
+
+                    # Parse STIX SCO string to a Python list
+                    stix_sco_data = json.loads(stix_sco)
+                    if not isinstance(stix_sco_data, list):
+                        raise ValueError("Parsed STIX SCO must be a list of dictionaries.")
+
+                    # Add UUIDs to IDs
+                    stix_sco_data = ti_stix.add_uuid_to_ids(stix_sco_data)
+
+                    # Validate STIX objects
+                    is_valid_sco, invalid_sco_objects = ti_stix.validate_stix_objects(stix_sco_data)
+
+                    if not is_valid_sco:
+                        print("Validation failed for SCO. Requesting correction from LLM...")
+                        stix_sco = ti_stix.correct_invalid_stix(text, invalid_sco_objects, stix_sco)
+                    else:
+                        print("Validation successful for SCO. All objects are valid.")
+
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing STIX SCO: {e}")
+                    stix_sco = ti_stix.correct_invalid_stix(text, [], stix_sco)
+                except ValueError as e:
+                    print(e)
+                    stix_sco = ti_stix.correct_invalid_stix(text, [], stix_sco)
+
+            # Final validated STIX SCO as JSON string
+            stix_sco = json.dumps(stix_sco_data, indent=4)
+            st.session_state['stix_sco'] = stix_sco
+            with st.expander("See SCO JSON"):  
+                st.code(stix_sco)
+        
+            # Final validated STIX SRO as JSON string
+            is_valid = False
+            stix_sro = st.session_state['stix_sro'] 
+
+            while not is_valid:
+                try:
+                    # Generate STIX SROs
+                    stix_sro = ti_stix.sro_stix(text, stix_sdo, stix_sco, client, service_selection, deployment_name)
+
+                    # Parse and validate STIX SROs
+                    stix_sro_data = json.loads(stix_sro)
+                    if not isinstance(stix_sro_data, list):
+                        raise ValueError("Parsed STIX SRO must be a list of dictionaries.")
+
+                    # Add UUIDs to IDs
+                    stix_sro_data = ti_stix.add_uuid_to_ids(stix_sro_data)
+
+                    # Validate STIX objects
+                    is_valid, invalid_objects = ti_stix.validate_stix_objects(stix_sro_data)
+
+                    if not is_valid:
+                        print("Validation failed. Requesting correction from LLM...")
+                        stix_sro = ti_stix.correct_invalid_stix(input_text, invalid_objects, stix_sdo, stix_sco, client, ai_service_provider, deployment_name)
+                    else:
+                        print("Validation successful. All objects are valid.")
+
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing STIX SRO: {e}")
+                    stix_sro = ti_stix.correct_invalid_stix(input_text, [], stix_sro)
+                except ValueError as e:
+                    print(e)
+                    stix_sro = ti_stix.correct_invalid_stix(input_text, [], stix_sro, stix_sco)
+
+                # Final validated STIX SRO as JSON string
+                stix_sro = json.dumps(stix_sro_data, indent=4)
+                st.session_state['stix_sro'] = stix_sro
+                with st.expander("See SRO JSON"):  
+                    st.code(stix_sro)
+            
+            #create STIX bundle
+            # Remove brackets and parse as JSON
+            stix_sdo_objects = json.loads(ti_stix.remove_brackets(stix_sdo))
+            stix_sco_objects = json.loads(ti_stix.remove_brackets(stix_sco))
+            stix_sro_objects = json.loads(ti_stix.remove_brackets(stix_sro))
+
+            # Create STIX bundle
+            stix_bundle = ti_stix.create_stix_bundle(stix_sdo_objects, stix_sco_objects, stix_sro_objects)
+            with st.expander("See STIX 2.1 JSON Bundle"):  
+                    st.code(stix_bundle)
+            
+            # Upload the layer data to GitHub and get the raw URL
+            stix_bundle_json = json.loads(stix_bundle)
+            raw_url_stix = ti_stix.upload_to_github_stix(stix_bundle_json)
+            
+            # Embed the STIX Visualizer in an iframe
+            stix_iframe_url = f"https://oasis-open.github.io/cti-stix-visualization/?url={raw_url_stix}"
+
+            iframe_stix_html = f"""
+            <iframe src="{stix_iframe_url}" width="1200" height="1000" frameborder="0"></iframe>
+            """
+            st.write("## STIX Visualizer ##")
+            st.markdown(iframe_stix_html, unsafe_allow_html=True)
 
     #TAB6
     with tab6:
+        st.write("🗃️ Writeup MarkDown Visualizer")
+        st.write("***Work in progress***")
+        st.write(st.session_state['text'])
+    #TAB7
+    with tab7:
         st.write("🗃️ Conf file - future release🚧")
         st.write("***Work in progress***")
