@@ -1,25 +1,42 @@
-BeautifulSoup4
+# Web, API, and Core
+streamlit
+requests
+beautifulsoup4
+urllib3
+httpx
+
+# AI Model Libraries & Frameworks
 openai
 cohere
-requests
-utils
-pandas
 langchain
 langchain_community
 langchain_openai
-#faiss-cpu==1.7.1.post2
-faiss-cpu==1.8.0
-urllib3
-matplotlib
-pillow
-streamlit-pdf-viewer
-ipython
-reportlab
 langchain-mistralai==0.1.4
 mistralai==0.1.8
-PyGithub
 langsmith
+
+# Data Handling & Vector Stores
+pandas
+faiss-cpu==1.8.0
+
+# PDF Processing & Generation
+PyPDF2
+reportlab
+streamlit-pdf-viewer
+
+# GitHub API
+PyGithub
+
+# Markdown, Mindmap & STIX
+markdownify
 streamlit_markmap
 stix2
-#httpx==0.27.2
-markdownify
+
+# Image Handling
+pillow
+
+# Development & Utilities
+ipython
+matplotlib
+python-utils # Assuming 'utils' referred to a package like 'python-utils'.
+             # If 'utils' was a local module or a different PyPI package, please adjust.
