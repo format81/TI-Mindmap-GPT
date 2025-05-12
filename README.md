@@ -1,4 +1,4 @@
-<img src="logoTIMINDMAPGPT-small.png" alt="TI MINDMAP GPT" width="200" height="200"/>
+<img src="docs & media/images/logoTIMINDMAPGPT-small.png" alt="TI MINDMAP GPT" width="200" height="200"/>
 
 Welcome to TI MINDMAP GPT, an AI-powered tool designed to help produce Threat Intelligence Mindmaps.
 
@@ -23,7 +23,7 @@ App: [APP](https://ti-mindmap-gpt.streamlit.app/)
 If you find TI MINDMAP useful, please consider starring the repository on GitHub.
 
 ## Features
-- **Multiple Input Sources**: Analyze content from URLs, uploaded PDF files, or direct text input.
+- **Multiple Input Sources**: Analyze content from URLs, uploaded PDF files, or direct text input. (New)
 - **LLM Supported**: OpenAI, Azure OpenAI, MistralAI.
 - **Comprehensive Summarization**: AI-generated summaries in markdown format.
 - **Versatile Mindmapping**:
@@ -42,12 +42,12 @@ If you find TI MINDMAP useful, please consider starring the repository on GitHub
 - **AI-Powered Chat**: Engage in a conversation with your Threat Intelligence article/data (based on the processed text, which may be truncated for very long inputs).
 - **Detailed PDF Reporting**:
     - Export comprehensive PDF reports of your analysis.
-    - Includes: Source information (URL, PDF name, or "Pasted Text"), website screenshot (for URLs), AI summary, main mind map, IOCs table, TTPs overview table, TTPs by execution time, TTPs graphic timeline, and 5 Whats report table.
-    - Option for portrait or landscape orientation.
+    - Includes: Source information (URL, PDF name, or "Pasted Text"), website screenshot (for URLs), AI summary, main mind map, IOCs table, TTPs overview table, TTPs by execution time, TTPs graphic timeline, and 5 Whats report table. (New)
+    - Option for portrait or landscape orientation. (New)
 - **Content Management & Handling**:
-    - **Flexible Input**: Accepts content via URL scraping, PDF file uploads (text extraction via PyPDF2), and direct text pasting.
-    - **Original Content Access**: View and download the full, original input content in a dedicated tab, even if a shortened version was used for AI processing due to length.
-    - **Large Input Management**: For very long inputs, the application processes a significant portion of the text for AI analysis to manage performance and token limits, while still providing access to the full original text.
+    - **Flexible Input**: Accepts content via URL scraping, PDF file uploads (text extraction via PyPDF2), and direct text pasting. (New)
+    - **Original Content Access**: View and download the full, original input content in a dedicated tab, even if a shortened version was used for AI processing due to length. (New)
+    - **Large Input Management**: For very long inputs, the application processes a significant portion of the text for AI analysis to manage performance and token limits, while still providing access to the full original text. (New)
     - **Screenshot Capture**: For URL analysis, capture a screenshot of the source webpage.
 - **STIX 2.1 Reporting**: Generate STIX 2.1 bundles (SDOs, SCOs, SROs) with visualization (beta). (The dedicated project [GenAI-STIX2.1-Generator](https://github.com/format81/GenAI-STIX2.1-Generator/) has been merged.)
 
