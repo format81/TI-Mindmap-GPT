@@ -150,7 +150,8 @@ Raises:
   # Define the SYSTEM prompt
   system_prompt_attack_layer = (
       "You are tasked with creating an ATT&CK Matrix for Enterprise layer json file with attack version 14, navigator 4.9.1, layer version 4.5 to load a layer in MITRE ATT&CK Navigator. \n" 
-      f"Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain field use enterprise-attack."
+      f"Use {ttptable} as input. Print just json content, avoiding including any additional text in the response. In domain field use enterprise-attack. \n"
+      "Don't include any additional text in the response, just return the json content. For example, do not start with ```json and do not close with ```"
   )
   # Define the USER prompt
   user_prompt_attack_layer = (
