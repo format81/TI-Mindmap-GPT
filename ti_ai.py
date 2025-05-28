@@ -3,7 +3,8 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.callbacks import get_openai_callback
 from langchain_community.vectorstores import FAISS
-from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAI as langchainOAI, OpenAIEmbeddings
+#from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAI as langchainOAI, OpenAIEmbeddings
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings, ChatOpenAI as langchainChatOpenAI
 from langchain_mistralai.chat_models import ChatMistralAI as langchainMistralChat # Renamed for clarity
 from langchain_mistralai import MistralAIEmbeddings
 import pandas as pd
@@ -387,7 +388,8 @@ def ai_extract_iocs(input_text, client, ai_service_provider, deployment_name=Non
         "  - If Type is IP: https://www.virustotal.com/gui/ip-address/[Indicator]\n"
         "  - If Type is Domain: https://www.virustotal.com/gui/domain/[Indicator]\n"
         "  - For Type URL: Leave this column BLANK or put 'N/A'. It will be calculated later.\n"
-        "Remove brackets from IPs, URLs, domains (e.g., 'hxxp://example[.]com' becomes 'http://example.com')."
+        "Remove brackets from IPs, URLs, domains (e.g., 'hxxp://example[.]com' becomes 'http://example.com'). \n"
+        "No extra text, return just the CSV content. No '''\n"
     )
     
     try:
@@ -596,9 +598,12 @@ def ai_get_response(knowledge_base, query, service_selection, azure_api_key, azu
 
     llm = None
     try:
+        #if service_selection == "OpenAI":
+        #    if not openai_api_key: raise ValueError("OpenAI API key not provided.")
+        #    llm = langchainOAI(openai_api_key=openai_api_key, model_name=OPENAI_DEFAULT_MODEL, temperature=0.7)
         if service_selection == "OpenAI":
             if not openai_api_key: raise ValueError("OpenAI API key not provided.")
-            llm = langchainOAI(openai_api_key=openai_api_key, model_name=OPENAI_DEFAULT_MODEL, temperature=0.7)
+            llm = langchainChatOpenAI(openai_api_key=openai_api_key, model_name=OPENAI_DEFAULT_MODEL, temperature=0.7)
         elif service_selection == "Azure OpenAI":
             if not all([azure_api_key, azure_endpoint, deployment_name]):
                 raise ValueError("Azure API key, endpoint, or deployment name not provided.")
