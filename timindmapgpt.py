@@ -9,6 +9,7 @@ import os
 import json
 from uuid import uuid4
 import datetime # For PDF filename timestamp
+import time
 
 # --- NEW IMPORTS for PDF and text input ---
 import PyPDF2 # For PDF text extraction
@@ -48,18 +49,40 @@ if not os.path.exists(STATIC_DIR):
 # --- Helper Functions ---
 def scrape_text(url):
     """Scrapes text from a URL and converts to Markdown."""
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,it;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Cache-Control": "max-age=0",
+    }
+    
     try:
-        response = requests.get(url, headers=headers, timeout=20)
+        time.sleep(1)
+        
+        response = requests.get(url, headers=headers, timeout=20, allow_redirects=True)
         response.raise_for_status()
+        
         soup = BeautifulSoup(response.content, "html.parser")
         main_content = soup.find('main') or soup.body
         if main_content:
             # Convert to Markdown
-            # Forcing heading_style='atx' and other options for cleaner markdown
-            text = md_markdownify(str(main_content), heading_style='atx', bullets='-', code_language_callback=lambda el: el.get('class', [None])[0])
+            text = md_markdownify(str(main_content), heading_style='atx', bullets='-', 
+                                code_language_callback=lambda el: el.get('class', [None])[0])
             return text
         return "Could not extract main content from the page."
+        
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 403:
+            return f"Access denied (403): The website blocked the request. Try a different URL or contact the site administrator."
+        return f"HTTP Error {e.response.status_code}: {e}"
     except requests.exceptions.Timeout:
         return f"Failed to scrape the website: Request timed out for URL {url}"
     except requests.exceptions.RequestException as e:
@@ -180,6 +203,18 @@ with st.sidebar:
     st.markdown("Created by [Antonio Formato](https://www.linkedin.com/in/antonioformato/).")
     st.markdown("Contributor [Oleksiy Meletskiy](https://www.linkedin.com/in/alecm/).")
     st.markdown("⭐ :orange[Star on GitHub:] [![Star on GitHub](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)")
+    st.markdown("---")
+    st.markdown("### 🚀 Enterprise Solution")
+    st.markdown("""
+    **[TI Mindmap HUB](https://ti-mindmap-hub.com/landingpage)** - Fully hosted platform with:
+    - 24/7 automated OSINT processing
+    - STIX 2.1 export & IOC search
+    - Weekly AI-powered briefings
+    - No API keys or infrastructure needed
+    
+    *Perfect for enterprise security teams*
+    """)
+
     st.markdown("---")
 
     st.header("Visual Options")
