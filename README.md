@@ -2,6 +2,9 @@
 
 Welcome to TI MINDMAP GPT, an AI-powered tool designed to help produce Threat Intelligence Mindmaps.
 
+[![GitHub Stars](https://img.shields.io/github/stars/format81/TI-Mindmap-GPT?style=social)](https://github.com/format81/TI-Mindmap-GPT)
+[![Try TI Mindmap Hub](https://img.shields.io/badge/Try-TI_Mindmap_Hub-blue?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTV6TTIgMTdsOCAxMCA1LTEwLTV6Ii8+PC9zdmc+)](https://ti-mindmap-hub.com/landingpage)
+
 **Introducing TI Mindmap**
 Navigating through lengthy blog posts, threat intelligence articles, or write-ups can be daunting, especially for cyber threat intelligence teams aiming to extract key insights efficiently. Enter TI Mindmap, a tool accessible through the Streamlit app platform. This service harnesses the power of OpenAI, Azure OpenAI, and MistralAI to transform cumbersome content from URLs, uploaded PDFs, or direct text input into concise, actionable summaries. But it doesn't stop there. Utilizing sophisticated algorithms, TI Mindmap goes beyond mere text reduction, providing users with insightful encapsulations of crucial points and themes.
 
@@ -15,22 +18,25 @@ This tool aims to streamline the data analysis process, enabling teams to focus 
 
 ---
 
-### 🚀 Looking for an Enterprise Solution?
+### 🚀 TI Mindmap GPT vs TI Mindmap Hub
 
-**[TI Mindmap HUB](https://ti-mindmap-hub.com/landingpage)** - A fully hosted, advanced threat intelligence platform with automated OSINT processing, real-time analysis, and enterprise features:
+| Feature | TI Mindmap GPT (This Repo) | [TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage) |
+|---|---|---|
+| **Setup** | Bring your own API key | Zero configuration |
+| **Processing** | Manual, one report at a time | 24/7 automated, 50+ OSINT sources |
+| **Infrastructure** | Self-managed | Fully hosted |
+| **STIX 2.1 Export** | Beta | Production-ready |
+| **IOC Search** | Per-report extraction | Cross-report search engine |
+| **Weekly Briefings** | — | AI-powered multi-agent analysis |
+| **Article Submissions** | — | Community-driven enrichment |
+| **Platform Statistics** | — | Real-time analytics dashboard |
+| **Coming Soon** | — | MCP Server, Knowledge Graph, PDF Reports, KB GenAI Chat |
+| **Cost** | Free + your LLM API costs | Hosted platform |
+| **Best for** | Individual analysts, experimentation | Security teams needing continuous coverage |
 
-- **100% GenAI-Automated** processing of threat intelligence reports
-- **24/7 Real-Time** monitoring and analysis from curated OSINT sources
-- **STIX 2.1 Export** for seamless integration with SIEMs, SOARs, and Threat Intelligence Platforms (TIPs)
-- **Weekly Intelligence Briefing** with multi-agent AI system analyzing trends, top TTPs, and targeted sectors
-- **IOC Search Engine** - Fast lookup across all processed reports for IP addresses, domains, file hashes, and other indicators
-- **Article Submissions** for community-driven intelligence enrichment
-- **Platform Statistics** - Real-time analytics dashboard with processing metrics and threat trends
-- **Coming Soon**: MCP Server integration, Knowledge Graph visualization, PDF report generation, and Knowledge Base GenAI Chat
+**If you're spending time configuring API keys and manually analyzing one report at a time, [TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage) automates all of this — continuously, at scale.**
 
-**Perfect for security teams** looking for automated, continuous threat intelligence processing without managing infrastructure or API keys. Accelerates workflows for Threat Analysts, SOC Teams, Incident Responders, and Security Leadership.
-
-[Learn more about TI Mindmap HUB →](https://ti-mindmap-hub.com/landingpage)
+[Try TI Mindmap Hub →](https://ti-mindmap-hub.com/landingpage)
 
 ---
 

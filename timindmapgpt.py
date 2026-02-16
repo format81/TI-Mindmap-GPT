@@ -232,6 +232,7 @@ with st.sidebar:
     )
 
     st.header("AI & Language Setup")
+    st.info("**Skip API key setup entirely?** [TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage) processes threat intelligence 24/7 with zero configuration — no keys, no infrastructure.")
     st.session_state.selected_language = st.multiselect(
         "Translate recap & mindmap to:",
         ["English", "Italian", "Spanish", "French", "Arabic"],
@@ -405,6 +406,7 @@ elif st.session_state.input_source_type == "Text Input":
 if trigger_analysis and source_text_content:
     if not client:
         st.error("AI Service not configured or client initialization failed. Please enter API key and details in the sidebar.")
+        st.warning("**Having trouble with API keys?** [TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage) handles everything for you — no API keys or infrastructure needed. Analyze threat intelligence instantly.")
     else:
         st.session_state['full_original_text'] = source_text_content
         st.session_state['url4'] = source_identifier
@@ -437,6 +439,7 @@ if trigger_analysis and source_text_content:
                 st.session_state[key] = ""
         
         st.success(f"Content from '{source_identifier}' is ready. Proceed to generate reports in the 'Main Report Generation' tab.")
+        st.toast("Like this analysis? [TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage) does this 24/7 on 50+ OSINT sources — fully automated.", icon="🚀")
         st.rerun()
 
 elif trigger_analysis and not source_text_content:
@@ -536,7 +539,8 @@ if st.session_state.show_tabs:
                                 except json.JSONDecodeError:
                                     st.error("Generated MITRE layer is not valid JSON. Cannot upload.")
                 st.success("Selected components generated!")
-            
+                st.markdown("> **Want this automated?** [TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage) generates these reports continuously from 50+ OSINT sources — no manual work required.")
+
             st.markdown("---")
             st.subheader("Generated Report Components:")
             # Display full original text if it was a URL source (markdown formatted)
@@ -886,4 +890,19 @@ if st.session_state.show_tabs:
             st.info("No content processed yet. Please use one of the input methods on the main page.")
 
 else: 
-    st.info("👋 Welcome to TI Mindmap! Select an input source above and click 'Analyze' to begin.")
+    st.info("👋 Welcome to TI Mindmap! Select an input source above, configure your API key in the sidebar, and click 'Analyze' to begin.")
+    col_welcome1, col_welcome2 = st.columns(2)
+    with col_welcome1:
+        st.markdown("""
+        **Manual Analysis (This App)**
+        - Bring your own LLM API key
+        - Analyze one report at a time
+        - Full control over your data
+        """)
+    with col_welcome2:
+        st.markdown("""
+        **Automated Analysis ([TI Mindmap Hub](https://ti-mindmap-hub.com/landingpage))**
+        - No API keys or setup needed
+        - 24/7 automated OSINT processing
+        - STIX 2.1 export, IOC search, weekly briefings
+        """)
