@@ -38,6 +38,8 @@ This tool aims to streamline the data analysis process, enabling teams to focus 
 
 [Try TI Mindmap Hub →](https://ti-mindmap-hub.com/landingpage)
 
+📂 **Open Research**: Explore the public research repository with methodologies, datasets, and technical documentation behind TI Mindmap Hub: [ti-mindmap-hub-research](https://github.com/TI-Mindmap-HUB-Org/ti-mindmap-hub-research)
+
 ---
 
 ## Table of Contents
